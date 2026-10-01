@@ -43,6 +43,12 @@ Roles live in `app/core/roles.py` (`OWNER`, `MODERATOR`, `PLATFORM_ADMIN`). Reus
 - The platform admin uses only the admin panel endpoints (Prompt 19) and is never treated as a shop user: `require_owner` / `require_shop_user` reject it and `get_current_shop_id` gives it no shop.
 - Frontend: nav items declare their `roles` in `src/app/(dashboard)/layout.tsx`; pages wrap their content in `RoleGuard` / `OwnerOnly` (`src/components/RoleGuard.tsx`) so a direct URL shows "Not allowed". Hiding in the UI is convenience only; the backend dependency is the real check.
 
+## Products & media
+- `products` is shop-owned (`shop_id` FK cascade + index). `sizes`, `colours` and `photos` are PostgreSQL `text[]` arrays (empty by default); price is `NUMERIC(10,2)` BDT, stock is an integer >= 0. The catalogue is the AI's source of truth for price, size, colour and stock.
+- All product access goes through `ProductService` (a `ShopScopedRepository`). Products endpoints are owner-only; another shop's product is always a 404.
+- Photos: at most 5 per product. The database keeps **storage keys** (`shops/<shop_id>/products/<uuid>.<ext>`); the API returns full URLs built from `BACKEND_PUBLIC_URL` + `/media/<key>`. `StorageService` (`app/services/storage.py`) stores files under `MEDIA_ROOT` (git-ignored), detects JPEG/PNG/WebP from the file bytes, and enforces `MAX_UPLOAD_MB`. Uploads are all-or-nothing. Deleting a product or photo deletes the files.
+- **Embedding hook (Prompt 8):** `product_hooks.product_changed(shop_id, product_id)` and `product_hooks.product_deleted(shop_id, product_id)` in `app/services/products.py` are called after every create/update/photo change and after delete. They are no-ops now.
+
 ## Plans & message limits
 - Plans (`free` / `basic` / `pro`) live in the `plans` table, seeded from `database/seed/plans.json` by `python -m app.cli seed`. **Prices and limits are placeholders (team to decide).** Every shop has a `plan_id`. Payments are simulated only (`simulated_payments`, no gateway, no card/bKash/Nagad data); paid plans need `simulated_payment_confirmed: true`.
 - **Counting rule:** one count = one AI reply sent to a customer on Messenger. Test chat window messages (Prompt 9) are not counted. Counts reset per calendar month in Asia/Dhaka (`shop_message_usage`, period `YYYY-MM`).

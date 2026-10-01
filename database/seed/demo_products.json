@@ -1,0 +1,79 @@
+{
+  "_note": "Fictional demo products only, keyed by demo shop owner email. Prices in BDT. No photos (add them through the dashboard).",
+  "rina.demo@example.com": [
+    {
+      "name": "Red Jamdani Saree",
+      "description": "Hand-woven red Jamdani saree with traditional floral motifs. Soft cotton-silk blend, comes with blouse piece.",
+      "price": 4800,
+      "sizes": [],
+      "colours": ["Red"],
+      "stock_count": 6
+    },
+    {
+      "name": "Cotton Panjabi",
+      "description": "Comfortable everyday cotton panjabi with chest embroidery. Regular fit.",
+      "price": 1850,
+      "sizes": ["M", "L", "XL", "XXL"],
+      "colours": ["White", "Navy", "Maroon"],
+      "stock_count": 24
+    },
+    {
+      "name": "Nakshi Kantha Wall Hanging",
+      "description": "Handmade Nakshi Kantha embroidery, about 18 x 24 inches. Each piece is slightly different.",
+      "price": 2200,
+      "sizes": [],
+      "colours": ["Multicolour"],
+      "stock_count": 5
+    },
+    {
+      "name": "Homemade Mango Pickle (Achar) 500g",
+      "description": "Sun-dried green mango pickle made in small batches with mustard oil. 500 gram jar.",
+      "price": 450,
+      "sizes": ["250g", "500g"],
+      "colours": [],
+      "stock_count": 40
+    },
+    {
+      "name": "Matte Lipstick",
+      "description": "Long-lasting matte lipstick, skin-safe formula.",
+      "price": 650,
+      "sizes": [],
+      "colours": ["Rose", "Coral", "Brick Red"],
+      "stock_count": 0
+    }
+  ],
+  "karim.demo@example.com": [
+    {
+      "name": "Wireless Earbuds",
+      "description": "Bluetooth 5.3 earbuds with charging case, up to 20 hours total playtime.",
+      "price": 1450,
+      "sizes": [],
+      "colours": ["Black", "White"],
+      "stock_count": 15
+    },
+    {
+      "name": "Power Bank 10000mAh",
+      "description": "Slim 10000mAh power bank with dual USB output and fast charging.",
+      "price": 1250,
+      "sizes": [],
+      "colours": ["Black"],
+      "stock_count": 0
+    },
+    {
+      "name": "Smart Watch",
+      "description": "Fitness smart watch with heart-rate tracking and 7-day battery.",
+      "price": 2990,
+      "sizes": [],
+      "colours": ["Black", "Silver", "Blue"],
+      "stock_count": 8
+    },
+    {
+      "name": "Phone Back Cover",
+      "description": "Shock-proof transparent back cover.",
+      "price": 250,
+      "sizes": ["Small", "Medium", "Large"],
+      "colours": ["Clear"],
+      "stock_count": 60
+    }
+  ]
+}

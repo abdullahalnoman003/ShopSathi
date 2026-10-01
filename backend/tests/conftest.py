@@ -1,4 +1,5 @@
 import os
+import tempfile
 
 # Point the whole app at the test database and a separate Redis db BEFORE the app is imported.
 from app.core.config import get_settings
@@ -6,6 +7,7 @@ from app.core.config import get_settings
 _s = get_settings()
 os.environ["DATABASE_URL"] = _s.test_database_url
 os.environ["REDIS_URL"] = _s.redis_url.rsplit("/", 1)[0] + "/15"
+os.environ["MEDIA_ROOT"] = tempfile.mkdtemp(prefix="shopsathi-test-media-")
 get_settings.cache_clear()
 
 import pytest  # noqa: E402

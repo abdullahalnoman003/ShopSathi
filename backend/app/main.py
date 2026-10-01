@@ -1,5 +1,8 @@
 from fastapi import FastAPI
+from pathlib import Path
+
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
@@ -15,3 +18,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(api_router, prefix="/api/v1")
+
+# Uploaded product photos are served at /media/... (reachable by URL, e.g. for Messenger).
+_media_root = Path(settings.media_root)
+_media_root.mkdir(parents=True, exist_ok=True)
+app.mount("/media", StaticFiles(directory=_media_root), name="media")

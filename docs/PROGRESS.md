@@ -39,3 +39,14 @@
 **Pages:** `/dashboard/staff`; `/dashboard/plan` is now owner-only in the UI.
 **New env vars:** none.
 **Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
+
+## Prompt 5 — Product catalogue
+**Built:** owner-only, shop-scoped product catalogue (name, description, price, sizes, colours, stock, up to 5 photos); `StorageService` for local photo storage served at `/media`; `ProductService` with a clearly named hook point (`product_hooks`) for Prompt 8 embeddings; demo products for the two demo shops. Frontend: Products list (table on laptops, cards on phones, search, pagination, inline delete confirmation), add/edit form with chip inputs for sizes/colours and photo upload with previews and remove.
+
+**Tables (migration 0004):** `products`.
+**Endpoints (`/api/v1/products`, owner only):** `GET` (search `q`, `page`, `page_size`), `POST`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`, `POST /{id}/photos` (multipart `files`), `DELETE /{id}/photos/{index}`. Static files at `/media/...`.
+**Pages:** `/dashboard/products`, `/dashboard/products/new`, `/dashboard/products/[id]`.
+**New env vars (backend):** `BACKEND_PUBLIC_URL`, `MEDIA_ROOT`, `MAX_UPLOAD_MB`. New dependency: `python-multipart`.
+**Seed:** `database/seed/demo_products.json`, loaded by `python -m app.cli seed` (idempotent by product name per shop).
+**Upgrade steps:** `pip install -r requirements.txt`, `alembic upgrade head`, `python -m app.cli seed`.
+**Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.

@@ -13,7 +13,7 @@ from sqlalchemy import select
 from app.core.config import get_settings
 from app.core.database import SessionLocal
 from app.core.security import hash_password
-from app.models import Shop, User
+from app.models import Product, Shop, User
 from app.services.plans import get_plan_by_code, seed_plans
 
 SEED_DIR = Path(__file__).resolve().parents[2] / "database" / "seed"
@@ -44,8 +44,28 @@ def create_admin(email: str, full_name: str) -> int:
     return 0
 
 
+def seed_demo_products(db) -> None:
+    """Create demo products for the demo shops (skips products whose name already exists in that shop)."""
+    data = json.loads((SEED_DIR / "demo_products.json").read_text(encoding="utf-8"))
+    for owner_email, products in data.items():
+        if owner_email.startswith("_"):
+            continue
+        owner = db.scalar(select(User).where(User.email == owner_email.lower()))
+        if owner is None or owner.shop_id is None:
+            continue
+        existing = set(db.scalars(select(Product.name).where(Product.shop_id == owner.shop_id)))
+        created = 0
+        for item in products:
+            if item["name"] in existing:
+                continue
+            db.add(Product(shop_id=owner.shop_id, photos=[], **item))
+            created += 1
+        db.commit()
+        print(f"products: {created} created for {owner_email}")
+
+
 def seed() -> int:
-    """Upsert the plans, then create the fictional demo shops from database/seed/demo_shops.json (idempotent)."""
+    """Upsert the plans, create the fictional demo shops and their demo products from database/seed/demo_shops.json (idempotent)."""
     demos = json.loads((SEED_DIR / "demo_shops.json").read_text(encoding="utf-8"))
     env_password = os.environ.get("DEMO_PASSWORD")
     with SessionLocal() as db:
@@ -75,6 +95,7 @@ def seed() -> int:
                 print(f"create {email} (password from DEMO_PASSWORD)")
             else:
                 print(f"create {email}  password: {password}   (shown once)")
+        seed_demo_products(db)
     return 0
 
 

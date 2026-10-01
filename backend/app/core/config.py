@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     )
     redis_url: str = "redis://localhost:6379/0"
     frontend_origin: str = "http://localhost:3000"
+    # Public base URL of this backend; product photo URLs are built from it
+    backend_public_url: str = "http://localhost:8000"
+
+    # Uploaded media (git-ignored folder, served at /media)
+    media_root: str = "media"
+    max_upload_mb: int = 5
 
     # Auth (no default for the secret: it must come from the environment)
     jwt_secret: str
