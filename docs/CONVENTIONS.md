@@ -160,3 +160,7 @@ See the root `README.md`.
 - Anything outside the database that belongs to a shop (files under `media/shops/<id>/`, Redis keys starting `chatmem|chatlock|chatmsgs|ingest:<shop_id>:` and `fb:pages:<shop_id>`) must be added to `ShopDeletionService` when a feature creates it.
 - Logs: never log message text, customer names/phones/addresses, passwords or tokens. `app/core/log_masking.py` masks secrets, e-mails and long digit runs as a safety net for every log record (API and worker); it is not a licence to log personal data.
 - Every shop-scoped endpoint that takes an id must be added to `sweep_requests` in `tests/test_privacy.py` (a meta-test fails otherwise).
+
+## AI evaluation (Prompt 21)
+- `evaluation/` is independent: it imports only `shopsathi_ai`, never `backend/`, and uses an in-memory gateway from `evaluation/fixtures/`. Run: `python evaluation/run_eval.py --data <jsonl> --provider mock|openai|gemini`; reports go to `evaluation/reports/`. The team's real labelled set is `evaluation/data/test_set.jsonl` (git-ignored; remove real people's personal details first). Sample cases are marked `"sample": true` and are never a product result.
+- When the AI engine gains a behaviour with a proposal target, add its metric to `evalkit/metrics.py` (and a label group to `evalkit/cases.py`) so it is reported overall and per language. Prompt tuning (M5) is done as separate, deliberate changes, re-measured with this tool.

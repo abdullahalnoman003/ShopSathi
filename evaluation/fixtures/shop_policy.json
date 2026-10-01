@@ -1,0 +1,14 @@
+{
+  "_note": "The evaluation shop's policy (fictional). Delivery charges are the expected values for the delivery cases.",
+  "delivery_time": "Inside Dhaka 1-2 days. Outside Dhaka 3-5 days.",
+  "return_rules": "You can return a damaged or wrong product within 3 days. Used products cannot be returned.",
+  "payment_options": "Cash on delivery and bKash.",
+  "delivery_areas": [
+    {"area_name": "Inside Dhaka", "charge": 60},
+    {"area_name": "Savar", "charge": 90},
+    {"area_name": "Khagan", "charge": 100},
+    {"area_name": "Outside Dhaka", "charge": 120},
+    {"area_name": "Chattogram", "charge": 130},
+    {"area_name": "Sylhet", "charge": 130}
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "_note": "A FICTIONAL shop used only to evaluate the AI. It is the source of truth for the expected prices and stock values in the labelled cases: if you change a price or a stock count here, update the labels that mention it.",
+  "shop": {"id": 1, "name": "Nirjhor Lifestyle (evaluation shop)"},
+  "products": [
+    {"id": 1, "name": "Red Jamdani Saree", "description": "Hand-woven red Jamdani saree with a gold border.", "price": 4800, "sizes": [], "colours": ["Red"], "stock_count": 6},
+    {"id": 2, "name": "Cotton Panjabi", "description": "Everyday cotton panjabi, soft and breathable.", "price": 1850, "sizes": ["M", "L", "XL", "XXL"], "colours": ["White", "Navy", "Maroon"], "stock_count": 24},
+    {"id": 3, "name": "Eid Special Panjabi", "description": "Light festive panjabi for Eid with embroidered collar.", "price": 1450, "sizes": ["M", "L", "XL"], "colours": ["White", "Cream"], "stock_count": 8},
+    {"id": 4, "name": "Premium Silk Panjabi", "description": "Silk panjabi for weddings and festivals.", "price": 1390, "sizes": ["M", "L", "XL"], "colours": ["Navy"], "stock_count": 0},
+    {"id": 5, "name": "Matte Lipstick", "description": "Long-lasting matte lipstick.", "price": 650, "sizes": [], "colours": ["Rose", "Coral", "Brick Red"], "stock_count": 0},
+    {"id": 6, "name": "Nakshi Kantha Wall Hanging", "description": "Hand-stitched nakshi kantha for the wall.", "price": 2200, "sizes": [], "colours": ["Multicolour"], "stock_count": 5},
+    {"id": 7, "name": "Homemade Mango Pickle (Achar) 500g", "description": "Homemade green mango pickle.", "price": 450, "sizes": ["250g", "500g"], "colours": [], "stock_count": 40},
+    {"id": 8, "name": "Wireless Earbuds", "description": "Bluetooth earbuds with a charging case.", "price": 1450, "sizes": [], "colours": ["Black", "White"], "stock_count": 15},
+    {"id": 9, "name": "Smart Watch", "description": "Fitness smart watch with heart-rate sensor.", "price": 2990, "sizes": [], "colours": ["Black", "Silver", "Blue"], "stock_count": 8},
+    {"id": 10, "name": "Phone Back Cover", "description": "Slim phone back cover.", "price": 250, "sizes": ["Small", "Medium", "Large"], "colours": ["Clear"], "stock_count": 60},
+    {"id": 11, "name": "Power Bank 10000mAh", "description": "Fast-charging power bank.", "price": 1250, "sizes": [], "colours": ["Black"], "stock_count": 0},
+    {"id": 12, "name": "Leather Wallet", "description": "Genuine leather wallet with card slots.", "price": 750, "sizes": [], "colours": ["Brown", "Black"], "stock_count": 12},
+    {"id": 13, "name": "Kids T-Shirt", "description": "Soft cotton t-shirt for children.", "price": 380, "sizes": ["4Y", "6Y", "8Y"], "colours": ["Blue", "Green"], "stock_count": 30},
+    {"id": 14, "name": "Silk Scarf", "description": "Printed silk scarf.", "price": 1200, "sizes": [], "colours": ["Maroon", "Gold"], "stock_count": 7},
+    {"id": 15, "name": "Block Print Three-Piece", "description": "Block-printed cotton three-piece set.", "price": 3200, "sizes": ["38", "40", "42"], "colours": ["Green", "Indigo"], "stock_count": 4}
+  ]
+}

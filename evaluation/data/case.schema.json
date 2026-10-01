@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ShopSathi evaluation case (one JSON object per line)",
+  "type": "object",
+  "required": ["id", "language", "type", "messages", "labels"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1, "description": "unique within the file"},
+    "language": {"enum": ["bangla", "english", "banglish"]},
+    "type": {"enum": ["intent", "answer", "order", "suggestion", "handover"]},
+    "messages": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "description": "the customer's turns in order; the AI's real replies become the context of the next turn"},
+    "sample": {"type": "boolean", "description": "true only for the harness samples; never for the team's real test set"},
+    "note": {"type": "string"},
+    "labels": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "intent": {"enum": ["price", "size_stock", "delivery", "suggestion", "order", "complaint", "other"]},
+        "answer": {
+          "type": "object", "minProperties": 1, "additionalProperties": false,
+          "properties": {
+            "prices": {"type": "array", "items": {"type": "number"}, "description": "BDT amounts the reply must state exactly"},
+            "stock_counts": {"type": "array", "items": {"type": "number"}, "description": "stock numbers the reply must state exactly"},
+            "available": {"type": "boolean", "description": "the reply must say the product is (or is not) available"}
+          }
+        },
+        "order": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "fields": {"type": "object", "additionalProperties": false, "properties": {
+              "product": {"type": ["string", "null"]}, "size": {"type": ["string", "null"]}, "colour": {"type": ["string", "null"]},
+              "quantity": {"type": ["integer", "null"]}, "name": {"type": ["string", "null"]}, "phone": {"type": ["string", "null"]}, "address": {"type": ["string", "null"]}
+            }},
+            "ready": {"type": "boolean", "description": "should the order be complete (drafted) after the last turn"},
+            "phone_invalid": {"type": "boolean", "description": "the customer gives an invalid phone number: the AI must ask again and not draft"}
+          }
+        },
+        "suggestion": {
+          "type": "object", "minProperties": 1, "additionalProperties": false,
+          "properties": {
+            "max_price": {"type": "number"},
+            "must_include": {"type": "array", "items": {"type": "string"}},
+            "must_not_include": {"type": "array", "items": {"type": "string"}},
+            "expect_none": {"type": "boolean"}
+          }
+        },
+        "handover": {
+          "type": "object", "required": ["flag"], "additionalProperties": false,
+          "properties": {
+            "flag": {"type": "boolean"},
+            "reason": {"enum": ["complaint", "refund", "abusive_language", "low_confidence", "off_topic", "not_in_shop_data", "human_requested", null]}
+          }
+        }
+      }
+    }
+  }
+}

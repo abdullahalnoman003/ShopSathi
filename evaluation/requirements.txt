@@ -1,0 +1,7 @@
+# The evaluation tool uses only the AI engine (never the backend).
+-e ../ai_engine
+pytest>=8
+# Real models (install what you use):
+#   -e ../ai_engine[openai]    OpenAI chat model (LLM_PROVIDER=openai) and embeddings
+#   -e ../ai_engine[gemini]    Gemini chat model
+#   -e ../ai_engine[local]     local multilingual embeddings (large download)

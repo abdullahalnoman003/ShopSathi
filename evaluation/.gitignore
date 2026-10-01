@@ -1,0 +1,7 @@
+# The team's real labelled test set may contain real customer messages: keep it out of git.
+data/test_set.jsonl
+data/*.private.jsonl
+# generated reports
+reports/*.md
+reports/*.json
+!reports/.gitkeep
