@@ -277,12 +277,12 @@ def test_a_complaint_in_the_middle_is_handed_over_and_the_pending_order_is_kept(
     pending = pending_of(phone=None)
     llm = ScriptedLLM(understand=[und("complaint")], order=[ex()])
     res = engine(llm)[0].process_customer_message(1, ctx(pending), "ager order e problem chilo")
-    assert res.handover.reason == "complaint" and res.pending_order == pending
+    assert res.handover.reason == "complaint" and res.pending_order == pending and res.reply_text == phrase("holding_complaint", "english")
 
 
 def test_unusable_extraction_is_safe():
     res, _, _ = run("ami nibo", {"quantity": "many"})
-    assert res.reply_text == CHECK["banglish"] and res.handover.reason == "order_extraction_failed"
+    assert res.reply_text == CHECK["banglish"] and (res.handover.reason, res.handover.detail) == ("low_confidence", "order_extraction_failed")
     mid, _, _ = run("hello", {"quantity": "many"}, intent="other", pending=pending_of(phone=None))
     assert mid.pending_order is not None and not mid.reply_text.startswith("Thanks! To prepare")  # fell through to normal handling
 
@@ -290,7 +290,7 @@ def test_unusable_extraction_is_safe():
 def test_llm_outage_is_safe():
     llm = ScriptedLLM(understand=[und("order")], order=[LLMProviderError("down")])
     res = engine(llm)[0].process_customer_message(1, ctx(), "ami nibo")
-    assert res.handover.reason == "ai_unavailable" and "order_ready" not in res.extras
+    assert (res.handover.reason, res.handover.detail) == ("low_confidence", "ai_unavailable") and "order_ready" not in res.extras
 
 
 def test_order_extraction_is_logged_as_its_own_operation():

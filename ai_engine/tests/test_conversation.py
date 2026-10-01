@@ -56,7 +56,7 @@ def test_understanding_schema_accepts_valid_and_rejects_invalid():
     ok = Understanding.model_validate(und("price", product="lal saree", confidence=0.8))
     assert ok.intent == "price" and ok.entities.product_name == "lal saree" and ok.entities.size is None
     assert Understanding.model_validate(und("other", product="  ")).entities.product_name is None  # blank -> None
-    for bad in (und("refund"), und("price", confidence=1.5), {"intent": "price"}, {}):
+    for bad in (und("shipping"), und("price", confidence=1.5), {"intent": "price"}, {}):
         with pytest.raises(Exception):
             Understanding.model_validate(bad)
 
@@ -166,7 +166,7 @@ def test_check_with_shop_is_in_the_customers_style():
 def test_ungrounded_number_regenerates_then_falls_back_with_handover():
     llm = ScriptedLLM(understand=[und("price", product="saree")], reply=[{"reply": "It costs 4500 BDT."}])
     res = make_engine(llm)[0].process_customer_message(1, ctx(), "saree price?")
-    assert res.reply_text == CHECK["english"] and res.handover.reason == "reply_not_grounded"
+    assert res.reply_text == CHECK["english"] and (res.handover.reason, res.handover.detail) == ("low_confidence", "reply_not_grounded")
     assert "4500" not in res.reply_text
     assert [u.operation for u in res.usage].count("chat_reply") == 2  # both attempts are logged
 
@@ -250,18 +250,18 @@ def test_greeting_needs_no_handover():
 def test_complaint_gets_the_safe_reply_only():
     llm = ScriptedLLM(understand=[und("complaint", product="saree")])
     res = make_engine(llm)[0].process_customer_message(1, ctx(), "product ta kharap chilo")
-    assert res.reply_text == CHECK["banglish"] and (res.handover.needed, res.handover.reason) == (True, "complaint")
+    assert res.reply_text == phrase("holding_complaint", "banglish") and (res.handover.needed, res.handover.reason) == (True, "complaint")
     assert llm.payloads("reply") == []
 
 
 def test_unusable_understanding_hands_over():
     res = make_engine(ScriptedLLM(understand=[{"junk": True}]))[0].process_customer_message(1, ctx(), "???")
-    assert res.reply_text == CHECK["english"] and res.handover.reason == "understanding_failed"
+    assert res.reply_text == CHECK["english"] and (res.handover.reason, res.handover.detail) == ("low_confidence", "understanding_failed")
 
 
 def test_llm_outage_falls_back_safely():
     res = make_engine(ScriptedLLM(understand=[LLMProviderError("down")]))[0].process_customer_message(1, ctx(), "price?")
-    assert res.reply_text == CHECK["english"] and res.handover.reason == "ai_unavailable"
+    assert res.reply_text == CHECK["english"] and (res.handover.reason, res.handover.detail) == ("low_confidence", "ai_unavailable")
 
 
 def test_only_recent_turns_and_no_personal_data_reach_the_llm():

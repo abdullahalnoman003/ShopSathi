@@ -13,3 +13,5 @@ Only **fictional** demo shops and products belong here - never real customer dat
 `demo_policies.json` holds fictional shop policies (delivery areas with charges, delivery time, return rules, payment options) per demo shop owner email.
 
 `demo_products.json` also contains "Eid Special Panjabi" (in stock, 1450) and "Premium Silk Panjabi" (sold out) so product suggestions can be tried with the proposal's example "eid er jonno 1500 er moddhe panjabi".
+
+`demo_chats.json` holds fictional Messenger conversations per demo shop owner: three handed to the shop (complaint, refund, human_requested: AI paused, notification created, one already read) and one normal chat. They let the notification bell be tried before the Messenger integration exists.

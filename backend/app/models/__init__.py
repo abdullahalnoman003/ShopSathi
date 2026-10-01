@@ -2,6 +2,7 @@
 
 from app.models.chat import Chat, Message
 from app.models.embedding import AiUsageLog, EmbeddingChunk
+from app.models.handover import HandoverEvent, Notification
 from app.models.order import Order
 from app.models.password_reset_token import PasswordResetToken
 from app.models.plan import Plan, ShopMessageUsage, SimulatedPayment
@@ -16,7 +17,9 @@ __all__ = [
     "EmbeddingChunk",
     "DeliveryArea",
     "PasswordResetToken",
+    "HandoverEvent",
     "Message",
+    "Notification",
     "Order",
     "Plan",
     "Product",

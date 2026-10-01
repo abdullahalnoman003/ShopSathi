@@ -8,12 +8,14 @@ import secrets
 import sys
 from pathlib import Path
 
+from datetime import datetime, timedelta, timezone
+
 from sqlalchemy import select, text
 
 from app.core.config import get_settings
 from app.core.database import SessionLocal
 from app.core.security import hash_password
-from app.models import Product, Shop, ShopPolicy, User
+from app.models import Chat, HandoverEvent, Message, Notification, Product, Shop, ShopPolicy, User
 from app.schemas.policy import PolicyIn
 from app.services.plans import get_plan_by_code, seed_plans
 from app.services.embeddings import DimensionMismatch, EmbeddingService
@@ -90,6 +92,66 @@ def seed_demo_policies(db) -> None:
         print(f"policy: created for {owner_email}")
 
 
+def seed_demo_chats(db) -> None:
+    """Fictional Messenger conversations, some flagged (AI paused, notification created). Skips existing ones."""
+    data = json.loads((SEED_DIR / "demo_chats.json").read_text(encoding="utf-8"))
+    now = datetime.now(timezone.utc)
+    for owner_email, chats in data.items():
+        if owner_email.startswith("_"):
+            continue
+        owner = db.scalar(select(User).where(User.email == owner_email.lower()))
+        if owner is None or owner.shop_id is None:
+            continue
+        created = 0
+        for item in chats:
+            exists = db.scalar(select(Chat.id).where(Chat.shop_id == owner.shop_id, Chat.customer_psid == item["psid"]))
+            if exists is not None:
+                continue
+            last = now - timedelta(minutes=item["minutes_ago"])
+            reason = item["flag_reason"]
+            chat = Chat(
+                shop_id=owner.shop_id,
+                channel="messenger",
+                customer_psid=item["psid"],
+                customer_name=item["name"],
+                ai_disclosure_sent=True,
+                last_customer_message_at=last,
+                is_flagged=bool(reason),
+                flag_reason=reason,
+                flagged_at=last if reason else None,
+                ai_paused=bool(reason),
+            )
+            db.add(chat)
+            db.flush()
+            for i, m in enumerate(item["messages"]):
+                at = last + timedelta(seconds=i)
+                db.add(
+                    Message(
+                        shop_id=owner.shop_id,
+                        chat_id=chat.id,
+                        sender=m["sender"],
+                        text=m["text"],
+                        received_at=at if m["sender"] == "customer" else None,
+                        sent_at=at if m["sender"] != "customer" else None,
+                    )
+                )
+            if reason:
+                db.add(HandoverEvent(shop_id=owner.shop_id, chat_id=chat.id, reason=reason, created_at=last))
+                db.add(
+                    Notification(
+                        shop_id=owner.shop_id,
+                        type="chat_flagged",
+                        chat_id=chat.id,
+                        reason=reason,
+                        created_at=last,
+                        read_at=last + timedelta(minutes=1) if item["notification_read"] else None,
+                    )
+                )
+            created += 1
+        db.commit()
+        print(f"chats: {created} created for {owner_email}")
+
+
 def _reembed(shop_ids: list[int], resize_column: bool = False) -> int:
     with SessionLocal() as db:
         svc = EmbeddingService(db)
@@ -160,6 +222,7 @@ def seed() -> int:
                 print(f"create {email}  password: {password}   (shown once)")
         seed_demo_products(db)
         seed_demo_policies(db)
+        seed_demo_chats(db)
     return 0
 
 

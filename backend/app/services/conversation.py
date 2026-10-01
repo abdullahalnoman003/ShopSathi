@@ -19,7 +19,8 @@ from app.ai_adapters.factory import get_embedder, get_llm
 from app.ai_adapters.gateway import BackendShopDataGateway
 from app.core.config import get_settings
 from app.core.redis import get_redis
-from app.models import Chat, Message, Order, Product, Shop
+from app.models import Chat, HandoverEvent, Message, Notification, Order, Product, Shop
+from app.models.handover import FLAG_REASONS
 from app.services.ai_usage import log_ai_usage
 from app.services.chat_memory import ChatMemoryService
 from app.services.tenant import scoped_select
@@ -31,8 +32,9 @@ ORDER_SENT_PLACEHOLDER = "(the customer's order details were sent to the shop)"
 @dataclass
 class ConversationResult:
     customer_message: Message
-    ai_message: Message
-    engine_result: EngineResult
+    #: None when the chat is handed to a human (AI paused): the message is stored, no reply is written
+    ai_message: Message | None
+    engine_result: EngineResult | None
     order: Order | None = None
 
 
@@ -42,7 +44,11 @@ def build_engine(db: Session) -> ConversationEngine:
         get_llm(),
         get_embedder(),
         BackendShopDataGateway(db),
-        EngineConfig(min_chunk_score=s.rag_min_score, min_product_score=s.rag_min_product_score),
+        EngineConfig(
+            min_chunk_score=s.rag_min_score,
+            min_product_score=s.rag_min_product_score,
+            confidence_threshold=s.ai_confidence_threshold,
+        ),
     )
 
 
@@ -131,6 +137,22 @@ class ConversationService:
             "status": order.status,
         }
 
+    # ------------------------------------------------------------------ handover
+
+    def _flag_chat(self, chat: Chat, reason: str, now: datetime) -> None:
+        """The AI could not handle this chat: flag it, hand it to a human (AI paused until a shop user turns it
+        back on, Prompt 15), record the event for reports, and notify the shop (Messenger chats only: a flag
+        in the Test chat window is shown in that window)."""
+        if reason not in FLAG_REASONS:
+            reason = "low_confidence"
+        chat.is_flagged = True
+        chat.flag_reason = reason
+        chat.flagged_at = now
+        chat.ai_paused = True
+        self.db.add(HandoverEvent(shop_id=chat.shop_id, chat_id=chat.id, reason=reason))
+        if chat.channel == "messenger":
+            self.db.add(Notification(shop_id=chat.shop_id, type="chat_flagged", chat_id=chat.id, reason=reason))
+
     # ------------------------------------------------------------------ entry point
 
     def handle_customer_message(self, chat: Chat, text: str) -> ConversationResult:
@@ -148,6 +170,9 @@ class ConversationService:
         # collection cannot be updated by two messages at once.
         with get_redis().lock(f"chatlock:{shop_id}:{chat.id}", timeout=90, blocking_timeout=60):
             db.refresh(chat)
+            if chat.ai_paused:  # handed to a human: keep the customer's message, write no AI reply
+                self.memory.append(chat, [Turn("customer", text, {})])
+                return ConversationResult(customer, None, None, None)
             shop = db.get(Shop, shop_id)
             ctx = ChatContext(
                 shop_name=shop.name if shop else "",
@@ -167,7 +192,7 @@ class ConversationService:
             extras: dict[str, Any] = {
                 **result.extras,
                 "entities": entities,
-                "handover": {"needed": result.handover.needed, "reason": result.handover.reason},
+                "handover": {"needed": result.handover.needed, "reason": result.handover.reason, "detail": result.handover.detail},
                 "disclosure": result.disclosure_included,
             }
             order: Order | None = None
@@ -179,7 +204,7 @@ class ConversationService:
                     extras["order_draft"] = self._draft_card(order)
                 else:  # never tell the customer it was sent when nothing was created
                     reply_text = phrase("check_with_shop", result.language_style)
-                    extras["handover"] = {"needed": True, "reason": "order_product_unavailable"}
+                    extras["handover"] = {"needed": True, "reason": "not_in_shop_data", "detail": "order_product_unavailable"}
 
             # keep the collected fields for the next turn (or clear them once the draft exists)
             if ready is not None:
@@ -188,6 +213,9 @@ class ConversationService:
                 chat.pending_order = None
             elif _strip_stamp(result.pending_order) != _strip_stamp(chat.pending_order):
                 chat.pending_order = {**_strip_stamp(result.pending_order), "updated_at": now.isoformat()}
+
+            if extras["handover"]["needed"]:
+                self._flag_chat(chat, extras["handover"]["reason"], now)
 
             ai = Message(
                 shop_id=shop_id,

@@ -1,0 +1,22 @@
+{
+  "_note": "Detection lists for handover (AI-R10). Matched on whole words / phrases. Kept precise on purpose: a question about the shop's refund or return POLICY is not a refund request.",
+  "abusive": [
+    "fuck", "fucking", "fucker", "shit", "bastard", "asshole", "bitch", "idiot", "stupid", "moron", "dumb",
+    "harami", "haramjada", "haramzada", "kutta", "kuttar bacha", "chudir", "chudi", "magi", "maagi", "bokachoda", "bokacoda", "gandu", "madarchod", "behenchod",
+    "হারামি", "হারামজাদা", "কুত্তা", "কুত্তার বাচ্চা", "চুদির", "মাগি", "মাগী", "বোকাচোদা", "গান্ডু", "খানকি", "বেয়াদব"
+  ],
+  "human": [
+    "talk to a person", "talk to a human", "talk to someone", "talk to a real person", "talk to the owner", "talk to the seller",
+    "speak to a person", "speak to a human", "speak to someone", "speak with a person", "speak to the owner", "speak to the seller",
+    "real person", "human agent", "live agent", "customer care", "customer service", "connect me to", "want a human",
+    "manusher sathe", "manusher shathe", "manush er sathe", "kono manush", "owner er sathe", "owner-er sathe", "seller er sathe", "seller-er sathe",
+    "dokandar er sathe", "dokandarer sathe", "kotha bolte chai", "kotha bolbo", "shop er manush", "shop-er manush", "karo sathe kotha", "kew ke din",
+    "মানুষের সাথে", "মানুষ চাই", "কারো সাথে কথা", "কারও সাথে কথা", "মালিকের সাথে", "দোকানদারের সাথে", "কথা বলতে চাই", "কথা বলব", "এজেন্টের সাথে"
+  ],
+  "refund": [
+    "want a refund", "want my refund", "need a refund", "give me a refund", "get a refund", "demand a refund", "i want refund", "refund me", "refund my", "refund now",
+    "want my money back", "want money back", "give me my money back", "return my money", "money back now",
+    "refund chai", "refund den", "refund dite", "refund korte", "refund koren", "refund koro", "taka ferot", "ferot chai", "ferot den", "ferot dite",
+    "টাকা ফেরত", "রিফান্ড চাই", "রিফান্ড দিন", "ফেরত চাই", "ফেরত দিন"
+  ]
+}

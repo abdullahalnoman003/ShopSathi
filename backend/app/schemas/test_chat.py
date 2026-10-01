@@ -12,6 +12,9 @@ class SessionOut(BaseModel):
     updated_at: datetime
     message_count: int
     last_message: str | None  # preview of the latest message
+    is_flagged: bool = False  # the AI handed this conversation to the shop
+    flag_reason: str | None = None
+    ai_paused: bool = False
 
 
 class MessageIn(BaseModel):
@@ -43,7 +46,15 @@ class HandoverOut(BaseModel):
     reason: str | None
 
 
+class ChatStateOut(BaseModel):
+    is_flagged: bool
+    flag_reason: str | None
+    ai_paused: bool
+
+
 class SendMessageResponse(BaseModel):
     customer_message: MessageOut
-    ai_message: MessageOut
+    #: None while the AI is paused for this conversation (a flagged chat): no reply is written
+    ai_message: MessageOut | None
     handover: HandoverOut
+    chat: ChatStateOut

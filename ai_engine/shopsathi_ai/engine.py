@@ -10,6 +10,7 @@ from typing import Any
 
 from shopsathi_ai.chunking import format_money
 from shopsathi_ai.extraction import extract_order
+from shopsathi_ai.handover import DEFAULT_CONFIDENCE_THRESHOLD, EngineState, decide_handover, reason_for_failure
 from shopsathi_ai.interfaces import ProductInfo, RetrievedChunk, ShopDataGateway, StockInfo
 from shopsathi_ai.language import LanguageStyle, detect_style, normalise_digits
 from shopsathi_ai.ordering import compose_order_reply, core, order_ready_fields, process_order
@@ -37,6 +38,8 @@ class EngineConfig:
     suggestion_pool: int = 10
     max_recent_turns: int = 6
     max_turn_chars: int = 300
+    #: understanding confidence below this flags the chat (backend setting AI_CONFIDENCE_THRESHOLD)
+    confidence_threshold: float = DEFAULT_CONFIDENCE_THRESHOLD
 
 
 @dataclass
@@ -57,6 +60,8 @@ class Handover:
 
     needed: bool = False
     reason: str | None = None
+    #: the technical cause when the reason is a general one (e.g. "ai_unavailable" under low_confidence)
+    detail: str | None = None
 
 
 @dataclass
@@ -147,7 +152,8 @@ class ConversationEngine:
         )
         run.add_llm("intent", outcome.usage)
         if outcome.understanding is None:
-            return self._check_with_shop(run, "understanding_failed")
+            decision = decide_handover(run.message, None, EngineState(order_in_progress=bool(run.ctx.pending_order)))
+            return self._hold(run, decision.reason or "low_confidence", "understanding_failed")
         und: Understanding = outcome.understanding
         run.intent, run.confidence = und.intent, und.confidence
         run.entities = und.entities.model_dump()
@@ -156,9 +162,19 @@ class ConversationEngine:
         if run.entities["size"]:
             run.entities["size"] = run.entities["size"].upper()
 
-        # Intents that later prompts will handle for real: a safe reply plus a handover signal.
-        if und.intent == "complaint":
-            return self._check_with_shop(run, "complaint")
+        # AI-5 / AI-R10: complaints, refund requests, abuse, a request for a person, an unsure AI and
+        # off-topic messages are passed to the shop with a short holding reply (greetings are never flagged).
+        if not (und.intent == "other" and is_greeting(run.message)):
+            decision = decide_handover(
+                run.message,
+                und,
+                EngineState(
+                    order_in_progress=bool(run.ctx.pending_order),
+                    confidence_threshold=self.config.confidence_threshold,
+                ),
+            )
+            if decision.flag:
+                return self._hold(run, decision.reason or "low_confidence")
         # Order drafting (AI-4): on an order request, and on follow-up turns while an order is being collected
         if und.intent == "order" or run.ctx.pending_order:
             ordered = self._order(run, und)
@@ -314,7 +330,7 @@ class ConversationEngine:
         run.add_llm("chat_reply", reply.usage)
         if reply.text is None:  # could not write a verified reply: no cards either
             return self._finish(
-                run, phrase("check_with_shop", run.style), Handover(True, reply.reason or "reply_not_grounded"), extras=extras
+                run, phrase("check_with_shop", run.style), Handover(True, "low_confidence", reply.reason or "reply_not_grounded"), extras=extras
             )
         extras["suggested_products"] = [suggestion_card(p) for p in picked]
         extras["product_ids"] = [p.id for p in picked]
@@ -382,9 +398,28 @@ class ConversationEngine:
 
     # --------------------------------------------------------------- results
 
-    def _check_with_shop(self, run: _Run, reason: str) -> EngineResult:
-        """The safe answer: never guess, say the shop will check, and signal that a person should look."""
-        return self._finish(run, phrase("check_with_shop", run.style), Handover(True, reason))
+    _HOLDING_PHRASE = {
+        "complaint": "holding_complaint",
+        "refund": "holding_complaint",
+        "abusive_language": "holding_abusive",
+        "human_requested": "holding_human",
+        "off_topic": "holding_off_topic",
+        "low_confidence": "check_with_shop",
+        "not_in_shop_data": "check_with_shop",
+    }
+
+    def _hold(self, run: _Run, reason: str, detail: str | None = None) -> EngineResult:
+        """Flag the chat for the shop: a short, polite holding reply in the customer's style. It promises nothing
+        (no refund, discount or answer); the shop's staff take over."""
+        return self._finish(run, phrase(self._HOLDING_PHRASE[reason], run.style), Handover(True, reason, detail))
+
+    def _check_with_shop(self, run: _Run, cause: str) -> EngineResult:
+        """The safe answer when the shop's data has no answer or something went wrong: never guess.
+
+        ``cause`` may be a flag reason or a technical failure ("ai_unavailable", "reply_not_grounded", ...),
+        which is recorded under a flag reason with the cause kept as the detail."""
+        reason = reason_for_failure(cause)
+        return self._hold(run, reason, None if cause == reason else cause)
 
     def _finish(self, run: _Run, body: str, handover: Handover, extras: dict[str, Any] | None = None) -> EngineResult:
         text = body

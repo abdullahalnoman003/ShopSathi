@@ -4,13 +4,22 @@ import json
 from dataclasses import dataclass, field
 from typing import Literal
 
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from shopsathi_ai.prompts import load, render
 from shopsathi_ai.providers.base import LLMProvider, LLMProviderError, LLMResult
 
 Intent = Literal["price", "size_stock", "delivery", "suggestion", "order", "complaint", "other"]
 INTENTS: tuple[str, ...] = ("price", "size_stock", "delivery", "suggestion", "order", "complaint", "other")
+_INTENT_AS_FLAG = {
+    "off_topic": "off_topic",
+    "refund": "refund_request",
+    "refund_request": "refund_request",
+    "abusive": "abusive_language",
+    "abusive_language": "abusive_language",
+    "human": "human_requested",
+    "human_requested": "human_requested",
+}
 
 
 class Entities(BaseModel):
@@ -35,6 +44,22 @@ class Understanding(BaseModel):
     entities: Entities = Field(default_factory=Entities)
     language_style: Literal["bangla", "english", "banglish"] = "english"
     confidence: float = Field(ge=0, le=1)
+    #: structured handover signals (see handover.py); all default to False
+    refund_request: bool = False
+    abusive_language: bool = False
+    human_requested: bool = False
+    off_topic: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def _handover_words_used_as_intent(cls, data):
+        """A model sometimes writes a handover flag name as the intent ("off_topic"). Keep the signal: it
+        becomes the matching flag with intent "other", so a safety flag is never lost to a validation error."""
+        if isinstance(data, dict) and isinstance(data.get("intent"), str):
+            flag = _INTENT_AS_FLAG.get(data["intent"].strip().lower().replace("-", "_").replace(" ", "_"))
+            if flag:
+                data = {**data, "intent": "other", flag: True}
+        return data
 
 
 @dataclass

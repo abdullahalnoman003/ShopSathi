@@ -39,6 +39,7 @@ _STOP = {
 }
 
 
+_OFF_TOPIC = {"cricket", "football", "weather", "politics", "election", "movie", "joke", "bitcoin", "president", "minister"}
 _OCCASIONS = {"eid", "puja", "wedding", "biye", "party", "winter", "summer", "birthday", "ঈদ", "বিয়ে", "পূজা"}
 _ORDER_COLOURS = {"red", "blue", "black", "white", "green", "navy", "yellow", "maroon", "cream", "rose", "coral", "silver", "natural", "brown"}
 _COLOURS = {
@@ -114,7 +115,9 @@ class MockLLMProvider(LLMProvider):
             "intent": intent,
             "entities": {"product_name": product, "size": size, "colour": None, "area": area},
             "language_style": detect_style(message),
-            "confidence": 0.5,
+            # no real words at all (e.g. "???"): the test double is "unsure"
+            "confidence": 0.9 if re.search(r"[A-Za-z\u0980-\u09FF]{2,}", message) else 0.2,
+            "off_topic": intent == "other" and bool(words & _OFF_TOPIC),
         }
 
     # ---- order extraction: regex rules over the customer's messages ----

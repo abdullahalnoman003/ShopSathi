@@ -202,7 +202,7 @@ def test_no_needs_at_all_asks_what_the_customer_wants():
 def test_ungrounded_reply_means_no_cards():
     llm = ScriptedLLM(understand=[und("suggestion", product="panjabi")], needs=[{"product_type": "panjabi"}], reply=[{"reply": "Only 700 BDT!"}])
     res = make_engine(llm)[0].process_customer_message(1, ctx(), "panjabi dekhan")
-    assert res.reply_text == CHECK["banglish"] and res.handover.reason == "reply_not_grounded"
+    assert res.reply_text == CHECK["banglish"] and (res.handover.reason, res.handover.detail) == ("low_confidence", "reply_not_grounded")
     assert res.extras["suggested_products"] == []
 
 

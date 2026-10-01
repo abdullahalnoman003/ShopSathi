@@ -92,12 +92,12 @@ def test_proposal_example_messages_get_grounded_replies(client, shop):
 
 
 def test_unknown_question_says_i_will_check_with_the_shop(client, shop):
-    sid = start(client, shop)
-    say(client, shop, sid, "hello")  # consume the disclosure
     for message, expected in [
         ("Blender price koto?", "Ami shop-er sathe check kore apnake janacchi."),
         ("What is the price of the blender?", "I'll check with the shop and get back to you."),
     ]:
+        sid = start(client, shop)  # a flagged conversation is paused, so one conversation per question
+        say(client, shop, sid, "hello")  # consume the disclosure
         res = say(client, shop, sid, message)
         assert res["ai_message"]["text"] == expected
         assert res["handover"] == {"needed": True, "reason": "not_in_shop_data"}
@@ -129,7 +129,7 @@ def test_messages_are_persisted_with_ai_fields(client, shop, db):
     assert customer.received_at is not None and ai.sent_at is not None
     assert (customer.intent, ai.intent) == ("price", "price") and ai.confidence is not None and ai.language_style == "banglish"
     assert ai.extras["tools"][0]["name"] == "search_products" and ai.extras["disclosure"] is True
-    assert ai.extras["handover"] == {"needed": False, "reason": None}
+    assert ai.extras["handover"] == {"needed": False, "reason": None, "detail": None}
     chat = db.get(Chat, sid)
     assert chat.channel == "test" and chat.last_customer_message_at is not None and chat.created_by_user_id is not None
 
@@ -272,7 +272,7 @@ def test_service_is_channel_independent_and_survives_an_llm_outage(client, shop,
 
     engine = ConversationEngine(Down(), MockEmbeddingProvider(1536), BackendShopDataGateway(db))
     result = ConversationService(db, engine).handle_customer_message(chat, "Red Jamdani Saree price koto?")
-    assert result.engine_result.handover.reason == "ai_unavailable"
+    assert (result.engine_result.handover.reason, result.engine_result.handover.detail) == ("low_confidence", "ai_unavailable")
     assert "check kore" in result.ai_message.text
     assert [m.sender for m in db.scalars(select(Message).where(Message.chat_id == chat.id).order_by(Message.id))] == ["customer", "ai"]
 

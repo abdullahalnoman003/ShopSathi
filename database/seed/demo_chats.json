@@ -1,0 +1,51 @@
+{
+  "_note": "Fictional Messenger conversations for the demo shops, keyed by owner email. flag_reason = the chat was handed to the shop (AI paused, notification created). minutes_ago = when the customer's last message arrived. No real customer data.",
+  "rina.demo@example.com": [
+    {
+      "psid": "demo-psid-1001",
+      "name": "Nasrin Sultana",
+      "flag_reason": "complaint",
+      "notification_read": false,
+      "minutes_ago": 12,
+      "messages": [
+        {"sender": "customer", "text": "Apnader product ta ki kharap chilo, color uthe geche dhuye"},
+        {"sender": "ai", "text": "Eta niye dukkhito. Apnar message ta shop-er kache pathiye diyechi, shop-er kew shigroi apnake reply korbe."}
+      ]
+    },
+    {
+      "psid": "demo-psid-1002",
+      "name": "Arif Hossain",
+      "flag_reason": "refund",
+      "notification_read": true,
+      "minutes_ago": 95,
+      "messages": [
+        {"sender": "customer", "text": "I want a refund for my last order"},
+        {"sender": "ai", "text": "I'm sorry about that. I've passed your message to the shop, and someone from the shop will reply to you soon."}
+      ]
+    },
+    {
+      "psid": "demo-psid-1003",
+      "name": "Tania Rahman",
+      "flag_reason": null,
+      "notification_read": false,
+      "minutes_ago": 30,
+      "messages": [
+        {"sender": "customer", "text": "Red Jamdani Saree price koto?"},
+        {"sender": "ai", "text": "Red Jamdani Saree er dam 4800 taka. Stock e 6 ta ache."}
+      ]
+    }
+  ],
+  "karim.demo@example.com": [
+    {
+      "psid": "demo-psid-2001",
+      "name": "Sohel Rana",
+      "flag_reason": "human_requested",
+      "notification_read": false,
+      "minutes_ago": 5,
+      "messages": [
+        {"sender": "customer", "text": "ami manusher sathe kotha bolte chai"},
+        {"sender": "ai", "text": "Thik ache. Shop-er kauke apnake reply korte bolechi. Ektu opekkha korun, please."}
+      ]
+    }
+  ]
+}

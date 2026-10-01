@@ -127,3 +127,18 @@
 **Real-model check** (gpt-4o-mini, Banglish, demo shop): "Cotton Panjabi nibo" -> asked size/colour/quantity/name/phone/address; "XL size, Navy colour, duita lagbe" and "amar nam Rahim Uddin" were picked up; "phone 0171234567" was refused and asked again; "sorry, number ta 01712345678" accepted; the address completed a draft (Cotton Panjabi, XL, Navy, 2, 1850 BDT each, status `draft`, `is_test`). 3-5 s per reply. The browser card matched the stored row.
 **Upgrade steps:** `alembic upgrade head`.
 **Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
+
+## Prompt 12 — Smart handover & seller notification
+**Built:**
+- AI engine: `handover.py` (`decide_handover(message, understanding, engine_state) -> HandoverDecision(flag, reason)`; the seven flag reasons; keyword safety net in `prompts/handover_terms.json`; configurable confidence threshold); structured handover flags in the understanding step (`refund_request`, `abusive_language`, `human_requested`, `off_topic`); polite fixed holding replies in the three styles; the engine flags before answering and for the "not in shop data" case. Old technical reasons now map onto the seven reasons (cause kept in `Handover.detail`).
+- Backend: `handover_events` and `notifications` tables; `ConversationService` flags the chat, pauses the AI, records the event and (Messenger only) a notification; a paused chat stores customer messages but writes no reply; notifications API; test-chat responses carry the chat's flag/pause state; demo flagged Messenger chats in `seed`.
+- Frontend: notification bell with unread count (polled every 30 s) and a list with mark-as-read / mark-all in the dashboard header; "flagged, AI paused" banner and notes in the Test chat window.
+
+**Tables (migration 0009):** `handover_events`, `notifications`.
+**Endpoints (owner + moderator):** `GET /api/v1/notifications`, `POST /api/v1/notifications/{id}/read`, `POST /api/v1/notifications/read-all`. Test-chat send/list responses gained `chat` / `is_flagged`, `flag_reason`, `ai_paused`; `ai_message` can be null while paused.
+**Pages:** none new (bell in the dashboard header; banner in `/dashboard/test-chat`). Links go to the planned `/dashboard/inbox/{chat_id}` (Prompt 15).
+**New env var (backend):** `AI_CONFIDENCE_THRESHOLD` (default 0.5).
+**Seed:** `database/seed/demo_chats.json` (3 flagged + 1 normal fictional Messenger chats), loaded by `python -m app.cli seed`.
+**Real-model check** (gpt-4o-mini): complaint, refund request, off-topic (cricket), "Do you sell laptops?" (not in shop data), "I want to talk to a person" and abuse each flagged with the right reason and the AI stopped replying; "refund policy ki?" is not flagged. Found and fixed: the model wrote `intent: "off_topic"` (outside the seven intents), which made the whole understanding invalid; it is now mapped to the `off_topic` flag.
+**Upgrade steps:** `alembic upgrade head`.
+**Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.

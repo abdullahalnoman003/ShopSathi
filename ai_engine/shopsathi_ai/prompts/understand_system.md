@@ -14,7 +14,11 @@ Return ONLY a JSON object with exactly these keys:
     "area": string or null
   },
   "language_style": "bangla" | "english" | "banglish",
-  "confidence": number from 0 to 1
+  "confidence": number from 0 to 1,
+  "refund_request": true or false,
+  "abusive_language": true or false,
+  "human_requested": true or false,
+  "off_topic": true or false
 }
 
 Intent meanings:
@@ -27,6 +31,20 @@ Intent meanings:
 - "order": wants to buy or order ("ami nibo", "order korbo", "confirm").
 - "complaint": a problem with an order, product, delivery or service, or an angry message.
 - "other": anything else (greetings, thanks, return or payment questions, unrelated questions).
+
+The "intent" must be exactly one of the seven values above. Handover situations are NOT intents: for a refund
+request, abuse, a request for a person or an off-topic message, use intent "other" (or "complaint") and set the
+matching flag below to true.
+
+Handover flags (all default to false; they decide whether the shop's staff must take over):
+- "refund_request": the customer asks for money back or a refund. A question about the shop's refund or return
+  POLICY ("return policy ki?") is NOT a refund request.
+- "abusive_language": insults, swearing or threats, in any language or spelling.
+- "human_requested": the customer asks to talk to a person, the owner or the seller instead of the assistant.
+- "off_topic": the message has nothing to do with this shop or shopping (sports, politics, general knowledge,
+  jokes, chit-chat). A question about a product the shop may not sell is NOT off-topic.
+- "confidence": how sure you are about the intent. Use a low value (below 0.5) when the message is unclear,
+  incomplete or could mean several different things.
 
 Rules:
 - Fill an entity only if the customer wrote it (or it is clearly meant from the recent messages). Otherwise use null.

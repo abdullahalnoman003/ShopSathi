@@ -172,5 +172,25 @@
       "address": "ঠিকানা",
       "price_value": "প্রতিটি {{price}} টাকা"
     }
+  },
+  "holding_complaint": {
+    "english": "I'm sorry about that. I've passed your message to the shop, and someone from the shop will reply to you soon.",
+    "banglish": "Eta niye dukkhito. Apnar message ta shop-er kache pathiye diyechi, shop-er kew shigroi apnake reply korbe.",
+    "bangla": "এ জন্য আমি দুঃখিত। আপনার বার্তাটি দোকানে পাঠিয়ে দিয়েছি, দোকানের কেউ শীঘ্রই আপনাকে উত্তর দেবে।"
+  },
+  "holding_abusive": {
+    "english": "I've passed this conversation to the shop, and someone from the shop will reply to you.",
+    "banglish": "Ei kotha-bartata shop-er kache pathiye diyechi, shop-er kew apnake reply korbe.",
+    "bangla": "এই কথোপকথনটি দোকানে পাঠিয়ে দিয়েছি, দোকানের কেউ আপনাকে উত্তর দেবে।"
+  },
+  "holding_human": {
+    "english": "Sure. I've asked someone from the shop to reply to you. Please wait a little.",
+    "banglish": "Thik ache. Shop-er kauke apnake reply korte bolechi. Ektu opekkha korun, please.",
+    "bangla": "ঠিক আছে। দোকানের কাউকে আপনাকে উত্তর দিতে বলেছি। অনুগ্রহ করে একটু অপেক্ষা করুন।"
+  },
+  "holding_off_topic": {
+    "english": "Sorry, I can only help with this shop's products, prices and delivery. I've passed your message to the shop.",
+    "banglish": "Sorry, ami shudhu ei shop-er product, dam ar delivery niye help korte pari. Apnar message ta shop-er kache pathiye diyechi.",
+    "bangla": "দুঃখিত, আমি শুধু এই দোকানের পণ্য, দাম ও ডেলিভারি নিয়ে সাহায্য করতে পারি। আপনার বার্তাটি দোকানে পাঠিয়ে দিয়েছি।"
   }
 }
