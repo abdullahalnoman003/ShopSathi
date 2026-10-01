@@ -164,3 +164,10 @@ See the root `README.md`.
 ## AI evaluation (Prompt 21)
 - `evaluation/` is independent: it imports only `shopsathi_ai`, never `backend/`, and uses an in-memory gateway from `evaluation/fixtures/`. Run: `python evaluation/run_eval.py --data <jsonl> --provider mock|openai|gemini`; reports go to `evaluation/reports/`. The team's real labelled set is `evaluation/data/test_set.jsonl` (git-ignored; remove real people's personal details first). Sample cases are marked `"sample": true` and are never a product result.
 - When the AI engine gains a behaviour with a proposal target, add its metric to `evalkit/metrics.py` (and a label group to `evalkit/cases.py`) so it is reported overall and per language. Prompt tuning (M5) is done as separate, deliberate changes, re-measured with this tool.
+
+## Performance, load & security testing (Prompt 22)
+- Run the Celery worker with a **thread pool** when many chats are active (`--pool=threads --concurrency=N`, N about 50) and set `DB_POOL_SIZE` + `DB_MAX_OVERFLOW` to at least N: an AI reply holds a database connection while it waits for the model. The `solo` pool answers one message at a time and cannot meet NFR-01 under load. A worker warms itself up on start.
+- The monthly reply allowance is **reserved atomically before** the AI work (`reserve_ai_reply`) and **released** if no reply was sent (`release_ai_reply`); never go back to "check, then count later". Do not use `record_ai_reply` in the message flow.
+- Behind an HTTPS reverse proxy set `TRUSTED_PROXIES` to the proxy's address (never `*` unless the backend is only reachable through it). Do not read `X-Forwarded-*` headers in application code: the middleware has already applied them.
+- `tests/security/test_role_matrix.py` classifies every endpoint (it fails for a new, unclassified one): add new endpoints to `allowed_roles`. Route lists must come from `app.openapi()`; `app.routes` does not list nested routers.
+- Load tests only ever talk to `scripts/loadtest/stub_send_api.py`; use `127.0.0.1`, not `localhost`, in local `FB_GRAPH_BASE_URL` on Windows.

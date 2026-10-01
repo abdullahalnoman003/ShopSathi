@@ -3,6 +3,7 @@ from pathlib import Path
 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
@@ -20,6 +21,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(api_router, prefix="/api/v1")
+# Behind a reverse proxy that ends HTTPS: believe X-Forwarded-For / X-Forwarded-Proto, but only from TRUSTED_PROXIES.
+# (Added last, so it runs first.) Without it every client looks like the proxy and the login rate limit is shared.
+_proxies = [p.strip() for p in settings.trusted_proxies.split(",") if p.strip()]
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*" if "*" in _proxies else _proxies)
 
 # Uploaded product photos are served at /media/... (reachable by URL, e.g. for Messenger).
 _media_root = Path(settings.media_root)

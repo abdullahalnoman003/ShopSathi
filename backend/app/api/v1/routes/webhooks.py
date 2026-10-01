@@ -52,7 +52,7 @@ async def receive_messenger(request: Request):
     """New Messenger events. Verify the signature, store the messages, queue the AI work, answer 200 at once."""
     body = await request.body()
     if len(body) > MAX_BODY_BYTES:
-        raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, "Payload too large")
+        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, "Payload too large")
     if not verify_signature(get_settings().fb_app_secret, body, request.headers.get("X-Hub-Signature-256")):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Invalid signature")
     try:

@@ -8,7 +8,6 @@ from datetime import date, datetime, timezone
 import httpx
 import pytest
 import respx
-from fastapi.routing import APIRoute
 from sqlalchemy import func, select, text
 
 from app.core.crypto import TokenCipher
@@ -276,17 +275,18 @@ def test_every_endpoint_that_takes_an_id_is_covered_by_the_sweep():
     from tests.test_privacy import sweep_requests as table
 
     covered = {(m, p.split("/", 2)[1], p.count("/")) for m, p, _ in table({"product": 1, "chat": 1, "test_chat": 1}, "2026-03-09", 1, 1)}
+    # the routes come from the OpenAPI schema: the app nests its routers, so app.routes does not list them
+    paths = app.openapi()["paths"]
+    id_routes = [(m.upper(), p) for p, ops in paths.items() for m in ops if p.startswith("/api/v1/") and "{" in p]
+    assert len(id_routes) >= 15, "the route list looks empty: the sweep would pass without checking anything"
     missing = []
-    for route in app.routes:
-        if not isinstance(route, APIRoute) or not route.path.startswith("/api/v1/") or "{" not in route.path:
-            continue
-        rest = route.path[len("/api/v1/"):]
+    for method, path in id_routes:
+        rest = path[len("/api/v1/"):]
         if rest.startswith(("admin/", "webhooks/")):
             continue  # the platform admin's endpoints are admin-only (tested separately); the webhook is signature-protected
-        for method in route.methods - {"HEAD", "OPTIONS"}:
-            segs = rest.split("/")
-            if (method, segs[0], len(segs)) not in covered:
-                missing.append((method, route.path))
+        segs = rest.split("/")
+        if (method, segs[0], len(segs)) not in covered:
+            missing.append((method, path))
     assert missing == [], f"add these to sweep_requests: {missing}"
 
 

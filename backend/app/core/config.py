@@ -8,6 +8,11 @@ class Settings(BaseSettings):
 
     app_env: str = "local"
     database_url: str = "postgresql+psycopg://shopsathi:shopsathi_local@localhost:5432/shopsathi"
+    # Database connection pool, per process (the API and every Celery worker process). A worker with many threads needs
+    # at least that many connections, plus a few for the API.
+    db_pool_size: int = 10
+    db_max_overflow: int = 20
+    db_pool_timeout_seconds: int = 30
     test_database_url: str = (
         "postgresql+psycopg://shopsathi:shopsathi_local@localhost:5432/shopsathi_test"
     )
@@ -52,6 +57,9 @@ class Settings(BaseSettings):
     fb_send_max_attempts: int = 3
     fb_send_retry_delay_seconds: float = 0.5
     # Dev/test only: point at a local fake Facebook (backend/scripts/fake_facebook.py). Leave the defaults in production.
+    # Reverse proxies (nginx ...) whose X-Forwarded-For / X-Forwarded-Proto headers are believed: comma separated IPs, or "*".
+    # Behind HTTPS termination set this to the proxy address so rate limits see the real client and URLs stay https.
+    trusted_proxies: str = "127.0.0.1"
     fb_graph_base_url: str = "https://graph.facebook.com"
     fb_dialog_base_url: str = "https://www.facebook.com"
 

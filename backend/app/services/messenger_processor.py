@@ -110,11 +110,13 @@ class MessengerProcessor:
         if not window_open(chat.last_customer_message_at):
             return "outside_window"  # also checked again when sending
         if not self.usage.can_send_ai_reply(chat.shop_id):
-            return "limit_reached"  # FR-15: the monthly limit stops AI replies
+            return "limit_reached"  # FR-15: the monthly limit stops AI replies (a quick check; the atomic one follows)
         return None
 
     def _process_one(self, chat: Chat, message: Message) -> None:
         started = datetime.now(timezone.utc)
+        reserved_period: str | None = None
+        sent = False
         try:
             self.db.refresh(chat)
             shop = self.db.get(Shop, chat.shop_id)
@@ -125,6 +127,13 @@ class MessengerProcessor:
                 self._mark(message, "skipped", ai_skip_reason=reason)
                 return
             assert page is not None
+            # FR-15 under concurrency: take a reply from the month's allowance atomically BEFORE the (slow) AI work, so many
+            # chats answered at the same moment cannot pass the limit. It is given back below if no reply is sent.
+            reserved_period = self.usage.reserve_ai_reply(chat.shop_id)
+            if reserved_period is None:
+                logger.info("chat %s message %s: no AI reply (limit_reached)", chat.id, message.id)
+                self._mark(message, "skipped", ai_skip_reason="limit_reached")
+                return
 
             self._ensure_customer_name(chat, page)
             ai = self._existing_reply(chat, message)  # a retried task must not answer twice
@@ -138,7 +147,7 @@ class MessengerProcessor:
                 self._mark(message, "skipped", ai_skip_reason="ai_paused")
                 return
             ai_done = datetime.now(timezone.utc)
-            self._deliver(chat, page, message, ai, started, ai_done)
+            sent = self._deliver(chat, page, message, ai, started, ai_done)
         except Exception as e:  # never crash the worker; the customer's message is safe in the database
             self.db.rollback()
             logger.exception("processing message %s failed: %s", message.id, e.__class__.__name__)
@@ -146,6 +155,13 @@ class MessengerProcessor:
                 self._mark(self.db.get(Message, message.id), "failed", ai_error=e.__class__.__name__)  # type: ignore[arg-type]
             except Exception:
                 self.db.rollback()
+        finally:
+            if reserved_period is not None and not sent:  # only a reply that Facebook accepted stays counted
+                try:
+                    self.usage.release_ai_reply(chat.shop_id, reserved_period)
+                except Exception:
+                    self.db.rollback()
+                    logger.error("could not give back a reserved reply of shop %s", chat.shop_id)
 
     def _existing_reply(self, chat: Chat, message: Message) -> Message | None:
         return self.db.scalars(
@@ -158,7 +174,8 @@ class MessengerProcessor:
 
     # ------------------------------------------------------------------ delivery
 
-    def _deliver(self, chat: Chat, page: FacebookPage, message: Message, ai: Message, started: datetime, ai_done: datetime) -> None:
+    def _deliver(self, chat: Chat, page: FacebookPage, message: Message, ai: Message, started: datetime, ai_done: datetime) -> bool:
+        """Send the reply. True if Facebook accepted it (the reserved reply then stays counted)."""
         psid = chat.customer_psid or ""
         delivery: dict[str, Any] = {"status": "failed"}
         try:
@@ -185,15 +202,16 @@ class MessengerProcessor:
             }
             ai.extras = {**ai.extras, "delivery": delivery}
             message.extras = {**(message.extras or {}), "ai_status": "replied"}
-            # counted only now that Facebook accepted the reply (this call commits everything above)
-            self.usage.record_ai_reply(chat.shop_id)
+            self.db.commit()  # the reply was reserved before and stays counted: Facebook accepted it
             logger.info("chat %s: reply sent in %s ms", chat.id, delivery["timings_ms"]["total"])
+            return True
         else:
             ai.extras = {**ai.extras, "delivery": delivery}
             message.extras = {**(message.extras or {}), "ai_status": "failed" if delivery["status"] == "failed" else "skipped",
                               "ai_skip_reason": delivery.get("reason", "send_failed")}
             self.db.commit()  # a reply that was not sent is not counted against the plan
             logger.warning("chat %s: reply not sent (%s)", chat.id, delivery.get("reason"))
+            return False
 
     def _send_photos(self, chat: Chat, page: FacebookPage, psid: str, ai: Message) -> dict[str, int]:
         """Suggested products come with their photo (AI-3). Best effort: the text reply is already delivered."""
