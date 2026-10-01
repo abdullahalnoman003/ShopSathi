@@ -8,3 +8,14 @@
 **Env vars:** see `docs/CONVENTIONS.md` and each `.env.example`.
 
 **Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
+
+## Prompt 2 — Shop accounts, authentication & multi-tenant separation
+**Built:** shop sign-up/login/logout/password reset by email (FR-01); JWT + bcrypt; Redis token denylist and rate limits; `EmailService` (SMTP or console log); security dependencies and tenant-scoping helper (FR-02); suspended-shop blocking; platform admin via CLI; fictional demo shops seed; frontend auth pages, auth module and protected dashboard shell.
+
+**Tables (migration 0002):** `shops`, `users`, `password_reset_tokens`.
+**Endpoints:** `POST /api/v1/auth/signup`, `/login`, `/logout`, `GET /auth/me`, `POST /auth/password-reset/request`, `/auth/password-reset/confirm`.
+**Pages:** `/signup`, `/login`, `/forgot-password`, `/reset-password?token=`, `/dashboard` (placeholder).
+**CLI:** `python -m app.cli create-admin --email ...` (password from `ADMIN_PASSWORD` or prompt); `python -m app.cli seed` (idempotent; demo password from `DEMO_PASSWORD` or generated and printed once).
+**New env vars (backend/.env.example):** `JWT_SECRET` (required), `ACCESS_TOKEN_EXPIRE_MINUTES`, `PASSWORD_MIN_LENGTH`, `PASSWORD_RESET_EXPIRE_MINUTES`, `LOGIN_RATE_LIMIT`, `LOGIN_RATE_WINDOW_SECONDS`, `RESET_RATE_LIMIT`, `RESET_RATE_WINDOW_SECONDS`, `SMTP_HOST/PORT/USERNAME/PASSWORD/FROM/USE_TLS`, `ADMIN_PASSWORD`, `DEMO_PASSWORD`.
+**Upgrade steps:** set `JWT_SECRET` in `backend/.env`, `pip install -r requirements.txt`, `alembic upgrade head`.
+**Run tests:** `cd backend && pytest` (DB + Redis running); `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.

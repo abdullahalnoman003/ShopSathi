@@ -19,8 +19,9 @@ Docker, Python 3.11+, Node 20+.
    python -m venv .venv
    .venv\Scripts\activate          # Windows; use: source .venv/bin/activate
    pip install -r requirements.txt
-   cp .env.example .env
+   cp .env.example .env            # then set JWT_SECRET (see the comment in the file)
    alembic upgrade head
+   python -m app.cli seed          # optional: fictional demo shops
    uvicorn app.main:app --reload   # http://localhost:8000/api/v1/health
    ```
 3. Celery worker (separate terminal, venv active; `--pool=solo` for Windows):

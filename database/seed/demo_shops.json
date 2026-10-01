@@ -1,0 +1,12 @@
+[
+  {
+    "shop_name": "Rina Fashion House (demo)",
+    "owner_name": "Rina Akter",
+    "owner_email": "rina.demo@example.com"
+  },
+  {
+    "shop_name": "Karim Gadget Corner (demo)",
+    "owner_name": "Karim Hossain",
+    "owner_email": "karim.demo@example.com"
+  }
+]

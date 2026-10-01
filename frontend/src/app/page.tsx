@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ApiError, getHealth, type HealthStatus } from "@/lib/api/client";
 
@@ -19,6 +20,10 @@ export default function Home() {
       <div>
         <h1 className="text-3xl font-bold">ShopSathi</h1>
         <p className="mt-1 text-sm opacity-70">AI sales agent for small online shops</p>
+      </div>
+      <div className="flex gap-3 text-sm">
+        <Link href="/login" className="rounded-md bg-emerald-600 px-4 py-2 font-medium text-white">Log in</Link>
+        <Link href="/signup" className="rounded-md border border-black/20 px-4 py-2 dark:border-white/25">Sign up</Link>
       </div>
       <section className="rounded-lg border border-black/15 p-4 dark:border-white/20">
         <h2 className="mb-3 font-semibold">Backend status</h2>
