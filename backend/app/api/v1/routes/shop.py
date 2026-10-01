@@ -1,15 +1,23 @@
+from datetime import datetime, timezone
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_shop_id, require_owner
+from app.api.deps import DENYLIST_PREFIX, get_current_shop_id, get_token_payload, require_owner
+from app.core.config import get_settings
 from app.core.database import get_db
+from app.core.rate_limit import check_rate_limit
+from app.core.redis import get_redis
 from app.core.roles import MODERATOR
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password
 from app.models import Shop, User
-from app.schemas.staff import StaffCreate, StaffOut
+from app.schemas.auth import MessageResponse
+from app.schemas.staff import ShopDelete, StaffCreate, StaffOut
 from app.schemas.plans import PlanChangeRequest, ShopPlanResponse
+from app.services.shop_deletion import ShopDeletionService
 from app.services.plans import PlanSelectionError, assign_plan, is_paid, resolve_plan_choice
 from app.services.tenant import scoped_select
 from app.services.usage import UsageLimitService
@@ -92,3 +100,27 @@ def add_staff(
         db.rollback()
         raise HTTPException(status.HTTP_409_CONFLICT, "Email is already registered")
     return user
+
+
+@router.delete("", response_model=MessageResponse)
+def delete_shop(
+    body: ShopDelete,
+    user: User = Depends(require_owner),
+    shop_id: int = Depends(get_current_shop_id),
+    payload: dict[str, Any] = Depends(get_token_payload),
+    db: Session = Depends(get_db),
+):
+    """Permanently delete this shop and ALL its data (products, chats, messages, orders, customers' details ...).
+    Needs the owner's current password and the exact shop name. Cannot be undone."""
+    s = get_settings()
+    check_rate_limit("shop-delete", str(user.id), s.login_rate_limit, s.login_rate_window_seconds)  # no password guessing
+    shop = db.get(Shop, shop_id)
+    if body.shop_name != shop.name:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "The shop name does not match. Type it exactly as shown.")
+    if not verify_password(body.password, user.password_hash):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Incorrect password.")
+    ShopDeletionService(db).delete_shop(shop_id)
+    ttl = int(payload["exp"] - datetime.now(timezone.utc).timestamp())  # the current token stops working at once
+    if ttl > 0:
+        get_redis().set(DENYLIST_PREFIX + payload["jti"], 1, ex=ttl)
+    return MessageResponse(message="Your shop and all its data were deleted.")

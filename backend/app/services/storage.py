@@ -1,5 +1,6 @@
 """Local media storage for uploaded images. Files are served by the backend at /media/<key>."""
 
+import shutil
 import uuid
 from pathlib import Path
 
@@ -59,6 +60,15 @@ class StorageService:
         path = (self.root / key).resolve()
         if self.root in path.parents:  # never touch anything outside the media folder
             path.unlink(missing_ok=True)
+
+    def delete_shop_files(self, shop_id: int) -> int:
+        """Remove every file this shop uploaded (the whole shops/<id>/ folder). Returns the number of files."""
+        folder = (self.root / "shops" / str(int(shop_id))).resolve()
+        if not folder.is_dir() or (self.root / "shops").resolve() not in folder.parents:
+            return 0
+        count = sum(1 for p in folder.rglob("*") if p.is_file())
+        shutil.rmtree(folder)
+        return count
 
     def url(self, key: str) -> str:
         if self.is_external(key):

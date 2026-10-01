@@ -332,3 +332,36 @@ def test_banglish_reply_in_bangla_script_is_regenerated_then_rejected():
 
     stubborn = write_reply(ScriptedLLM(reply=[{"reply": "দাম 4800 টাকা"}]), ReplyRequest("dam koto", "price", "banglish", ["Price: 4800 BDT"]))
     assert stubborn.text is None and stubborn.reason == "reply_wrong_script"
+
+
+# ------------------------------------------------------------ privacy: what the model is shown (section 5.3)
+
+
+def test_every_model_call_gets_only_the_recent_turns_never_the_history():
+    """The model gets what it needs for one reply: the last few turns plus retrieved facts, not the whole chat."""
+    import re
+
+    cfg_turns = 6  # EngineConfig.max_recent_turns
+    history = [Turn("customer" if i % 2 == 0 else "ai", f"HISTORY-TURN-{i:02d} red saree price koto") for i in range(40)]
+    scenarios = [
+        ScriptedLLM(understand=[und("price", product="red saree")], reply=[{"reply": "Red Jamdani Saree costs 4800 BDT."}]),
+        ScriptedLLM(understand=[und("suggestion")], needs=[{"product_type": "saree", "product_type_en": "saree"}], reply=[{"reply": "Here are some options."}]),
+        ScriptedLLM(understand=[und("order", product="red saree")], order=[{"product": "red saree", "quantity": 1}], reply=[{"reply": "ok"}]),
+    ]
+    for llm in scenarios:
+        engine, _ = make_engine(llm)
+        engine.process_customer_message(1, ctx(turns=history), "red saree price koto?")
+        assert llm.calls, "the model was not called"
+        for task, _system, user in llm.calls:
+            shown = re.findall(r"HISTORY-TURN-(\d\d)", user)
+            assert len(shown) <= cfg_turns + 2, f"{task}: {len(shown)} earlier turns were sent"  # the order step reads 2 more
+            assert all(int(n) >= 40 - (cfg_turns + 2) for n in shown), f"{task}: an old turn was sent: {shown}"
+            assert "HISTORY-TURN-00" not in user and "HISTORY-TURN-20" not in user
+
+
+def test_long_turns_are_cut_before_they_are_sent():
+    llm = ScriptedLLM(understand=[und("price", product="red saree")], reply=[{"reply": "Red Jamdani Saree costs 4800 BDT."}])
+    engine, _ = make_engine(llm)
+    long_turn = Turn("customer", "x" * 5000)
+    engine.process_customer_message(1, ctx(turns=[long_turn]), "price?")
+    assert all("x" * 400 not in user for _, _, user in llm.calls)

@@ -5,6 +5,9 @@ from email.message import EmailMessage
 from app.core.config import get_settings
 
 logger = logging.getLogger("shopsathi.email")
+#: local runs without SMTP print the whole mail (the reset link) so the flow can be tried; exempt from log masking
+dev_logger = logging.getLogger("shopsathi.email.dev")
+LOCAL_ENVS = {"local", "dev", "development"}
 
 
 class EmailService:
@@ -13,9 +16,10 @@ class EmailService:
     def send(self, to: str, subject: str, body: str) -> None:
         s = get_settings()
         if not s.smtp_host:
-            logger.warning(
-                "EMAIL (not sent, SMTP not configured)\nTo: %s\nSubject: %s\n\n%s", to, subject, body
-            )
+            if s.app_env.lower() in LOCAL_ENVS:
+                dev_logger.warning("EMAIL (not sent, SMTP not configured)\nTo: %s\nSubject: %s\n\n%s", to, subject, body)
+            else:  # never write an address or a reset link to the logs of a real deployment
+                logger.warning("e-mail not sent: SMTP is not configured (subject: %s)", subject)
             return
         msg = EmailMessage()
         msg["From"], msg["To"], msg["Subject"] = s.smtp_from, to, subject

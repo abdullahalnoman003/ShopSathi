@@ -2,8 +2,10 @@ from celery import Celery
 from celery.schedules import crontab
 
 from app.core.config import get_settings
+from app.core.log_masking import install_log_masking
 
 _settings = get_settings()
+install_log_masking()  # the worker logs through the same masking as the API
 
 celery_app = Celery(
     "shopsathi",

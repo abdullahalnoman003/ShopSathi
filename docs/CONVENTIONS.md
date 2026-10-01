@@ -154,3 +154,9 @@ See the root `README.md`.
 ## Admin panel (Prompt 19)
 - `/api/v1/admin/...` is `platform_admin` only (`require_roles(PLATFORM_ADMIN)`); the admin never reads a shop's chats, messages or customers. Frontend: the `/admin` area has its own layout; the login page sends each role to its own area.
 - Every admin change to a shop or plan is recorded in `admin_actions` (admin user id, time, details). Suspending a shop sets `shops.status = 'suspended'`; all enforcement already reads that status (login and every request, Messenger worker).
+
+## Data privacy & shop deletion (Prompt 20)
+- Every table that holds shop data must have `shop_id ... ON DELETE CASCADE` (or hang off a table that does): deleting the `shops` row removes everything. A new shop-owned table without that is a bug; `tests/test_privacy.py` checks every table with a `shop_id`.
+- Anything outside the database that belongs to a shop (files under `media/shops/<id>/`, Redis keys starting `chatmem|chatlock|chatmsgs|ingest:<shop_id>:` and `fb:pages:<shop_id>`) must be added to `ShopDeletionService` when a feature creates it.
+- Logs: never log message text, customer names/phones/addresses, passwords or tokens. `app/core/log_masking.py` masks secrets, e-mails and long digit runs as a safety net for every log record (API and worker); it is not a licence to log personal data.
+- Every shop-scoped endpoint that takes an id must be added to `sweep_requests` in `tests/test_privacy.py` (a meta-test fails otherwise).

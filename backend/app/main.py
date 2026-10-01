@@ -6,8 +6,10 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
+from app.core.log_masking import install_log_masking
 
 settings = get_settings()
+install_log_masking()  # no personal data or secrets in the logs
 
 app = FastAPI(title="ShopSathi API", version="0.1.0")
 app.add_middleware(

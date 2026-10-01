@@ -29,3 +29,10 @@ class StaffOut(BaseModel):
     role: str
     is_active: bool
     created_at: datetime
+
+
+class ShopDelete(BaseModel):
+    """Confirmation to delete the shop for good: the owner's current password and the exact shop name."""
+
+    password: str = Field(min_length=1, max_length=200)
+    shop_name: str = Field(min_length=1, max_length=200)
