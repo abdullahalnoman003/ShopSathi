@@ -19,7 +19,9 @@ class SignupRequest(BaseModel):
     owner_name: str = Field(min_length=1, max_length=200)
     email: EmailStr
     password: str
-    # Extension point (Prompt 3): the plan choice (Free/Basic/Pro) will be added here.
+    plan_code: str = "free"
+    # Paid plans (Basic/Pro) need this; it only records a SIMULATED payment, no money moves.
+    simulated_payment_confirmed: bool = False
 
     _pw = field_validator("password")(_check_password)
 

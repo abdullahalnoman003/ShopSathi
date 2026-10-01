@@ -28,6 +28,7 @@ from app.schemas.auth import (
     PasswordResetRequest,
     SignupRequest,
 )
+from app.services.plans import PlanSelectionError, assign_plan, is_paid, resolve_plan_choice
 from app.services.email import EmailService, get_email_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -49,8 +50,12 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)) -> AuthResponse:
     email = body.email.lower()
     if db.scalar(select(User.id).where(User.email == email)) is not None:
         raise HTTPException(status.HTTP_409_CONFLICT, "Email is already registered")
-    # Shop and owner are created in one transaction. Prompt 3 adds the plan to this step.
-    shop = Shop(name=body.shop_name)
+    try:
+        plan = resolve_plan_choice(db, body.plan_code, body.simulated_payment_confirmed)
+    except PlanSelectionError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e))
+    # Shop, owner and (for paid plans) the simulated payment are created in one transaction.
+    shop = Shop(name=body.shop_name, plan=plan)
     user = User(
         email=email,
         password_hash=hash_password(body.password),
@@ -60,6 +65,9 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)) -> AuthResponse:
     )
     db.add_all([shop, user])
     try:
+        db.flush()
+        if is_paid(plan):
+            assign_plan(db, shop, plan, record_simulated_payment=True)
         db.commit()
     except IntegrityError:
         db.rollback()

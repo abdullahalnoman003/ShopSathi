@@ -24,3 +24,6 @@ uploads/
 .DS_Store
 Thumbs.db
 celerybeat-schedule*
+
+# ignore forntend 
+frontend/

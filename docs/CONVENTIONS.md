@@ -29,6 +29,11 @@ Frontend route groups reserved for later prompts: `src/app/(auth)`, `src/app/(da
 - Frontend: token in `localStorage` (`src/lib/auth/storage.ts`), attached by `apiFetch`; a 401 clears it and redirects to `/login`. Auth state via `useAuth()` (`src/lib/auth/AuthProvider.tsx`). Auth pages live in `src/app/(auth)`, protected pages in `src/app/(dashboard)`.
 - Demo/test email addresses must use a valid domain such as `example.com` (`.test` is rejected by the email validator).
 
+## Plans & message limits
+- Plans (`free` / `basic` / `pro`) live in the `plans` table, seeded from `database/seed/plans.json` by `python -m app.cli seed`. **Prices and limits are placeholders (team to decide).** Every shop has a `plan_id`. Payments are simulated only (`simulated_payments`, no gateway, no card/bKash/Nagad data); paid plans need `simulated_payment_confirmed: true`.
+- **Counting rule:** one count = one AI reply sent to a customer on Messenger. Test chat window messages (Prompt 9) are not counted. Counts reset per calendar month in Asia/Dhaka (`shop_message_usage`, period `YYYY-MM`).
+- Use `UsageLimitService` (`app/services/usage.py`): `can_send_ai_reply` before sending, `record_ai_reply` (atomic upsert, commits) after a reply is sent, `get_usage` for display. Plan assignment goes through `app/services/plans.py` (`resolve_plan_choice`, `assign_plan`) so the admin plan change (Prompt 19) can reuse it. Not yet called from any message flow (Prompt 14 does that).
+
 ## Database
 - SQLAlchemy 2.x, **sync** sessions (`get_db` dependency), migrations with Alembic in `backend/alembic/`.
 - Every shop-owned table has a `shop_id` FK (`ON DELETE CASCADE`) plus an index; every query is scoped by `shop_id` (FR-02).

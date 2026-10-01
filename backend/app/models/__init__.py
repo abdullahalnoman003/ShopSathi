@@ -1,7 +1,8 @@
 """ORM models. Import every model module here so Alembic sees it."""
 
 from app.models.password_reset_token import PasswordResetToken
+from app.models.plan import Plan, ShopMessageUsage, SimulatedPayment
 from app.models.shop import Shop
 from app.models.user import User
 
-__all__ = ["PasswordResetToken", "Shop", "User"]
+__all__ = ["PasswordResetToken", "Plan", "Shop", "ShopMessageUsage", "SimulatedPayment", "User"]

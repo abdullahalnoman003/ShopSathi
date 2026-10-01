@@ -14,6 +14,7 @@ from app.core.config import get_settings
 from app.core.database import SessionLocal
 from app.core.security import hash_password
 from app.models import Shop, User
+from app.services.plans import get_plan_by_code, seed_plans
 
 SEED_DIR = Path(__file__).resolve().parents[2] / "database" / "seed"
 
@@ -44,17 +45,19 @@ def create_admin(email: str, full_name: str) -> int:
 
 
 def seed() -> int:
-    """Create the fictional demo shops from database/seed/demo_shops.json (idempotent)."""
+    """Upsert the plans, then create the fictional demo shops from database/seed/demo_shops.json (idempotent)."""
     demos = json.loads((SEED_DIR / "demo_shops.json").read_text(encoding="utf-8"))
     env_password = os.environ.get("DEMO_PASSWORD")
     with SessionLocal() as db:
+        print(f"plans: {seed_plans(db)} upserted (placeholder values, see database/seed/plans.json)")
+        free = get_plan_by_code(db, "free")
         for demo in demos:
             email = demo["owner_email"].lower()
             if db.scalar(select(User.id).where(User.email == email)) is not None:
                 print(f"skip   {email} (already exists)")
                 continue
             password = env_password or secrets.token_urlsafe(12)
-            shop = Shop(name=demo["shop_name"])
+            shop = Shop(name=demo["shop_name"], plan=free)
             db.add_all(
                 [
                     shop,

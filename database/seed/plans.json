@@ -1,0 +1,8 @@
+{
+  "_note": "PLACEHOLDER VALUES - the proposal gives no prices or message limits. Team to decide before launch. Prices are display only (BDT per month).",
+  "plans": [
+    {"code": "free",  "name": "Free",  "monthly_message_limit": 100,  "monthly_price": 0},
+    {"code": "basic", "name": "Basic", "monthly_message_limit": 1000, "monthly_price": 500},
+    {"code": "pro",   "name": "Pro",   "monthly_message_limit": 5000, "monthly_price": 1500}
+  ]
+}

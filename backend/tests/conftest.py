@@ -17,6 +17,7 @@ from app.core.database import Base, SessionLocal, engine  # noqa: E402
 from app.core.redis import get_redis  # noqa: E402
 from app.main import app  # noqa: E402
 from app.services.email import EmailService, get_email_service  # noqa: E402
+from app.services.plans import seed_plans  # noqa: E402
 
 
 class FakeEmail(EmailService):
@@ -41,6 +42,8 @@ def _clean():
         existing = set(inspect(conn).get_table_names())
         tables = ", ".join(t.name for t in Base.metadata.sorted_tables if t.name in existing)
         conn.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))
+    with SessionLocal() as session:
+        seed_plans(session)  # plans are reference data every shop needs
     yield
 
 

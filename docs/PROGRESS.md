@@ -19,3 +19,14 @@
 **New env vars (backend/.env.example):** `JWT_SECRET` (required), `ACCESS_TOKEN_EXPIRE_MINUTES`, `PASSWORD_MIN_LENGTH`, `PASSWORD_RESET_EXPIRE_MINUTES`, `LOGIN_RATE_LIMIT`, `LOGIN_RATE_WINDOW_SECONDS`, `RESET_RATE_LIMIT`, `RESET_RATE_WINDOW_SECONDS`, `SMTP_HOST/PORT/USERNAME/PASSWORD/FROM/USE_TLS`, `ADMIN_PASSWORD`, `DEMO_PASSWORD`.
 **Upgrade steps:** set `JWT_SECRET` in `backend/.env`, `pip install -r requirements.txt`, `alembic upgrade head`.
 **Run tests:** `cd backend && pytest` (DB + Redis running); `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
+
+## Prompt 3 — Subscription plans & message-limit service
+**Built:** Free/Basic/Pro plans (placeholder prices/limits in `database/seed/plans.json`), plan choice at sign-up, simulated payment for paid plans, owner-only plan change, per-shop monthly usage and a reusable `UsageLimitService` (not yet wired into any message flow; Prompt 14 does that). Frontend: plan picker + "Simulated payment — no real money is charged" step on sign-up, and a "My plan" dashboard page.
+
+**Tables (migration 0003):** `plans` (three placeholder rows inserted so existing shops default to Free), `simulated_payments`, `shop_message_usage` (unique per shop+period); new column `shops.plan_id` (required FK).
+**Endpoints:** `GET /api/v1/plans` (public); `POST /auth/signup` now accepts `plan_code` (default `free`) and `simulated_payment_confirmed`; `GET /api/v1/shop/plan`; `POST /api/v1/shop/plan/change` (owner only).
+**Pages:** `/signup` (plan step), `/dashboard/plan`.
+**CLI:** `python -m app.cli seed` now also upserts the plans.
+**New env vars:** none. New dependency: `tzdata` (Asia/Dhaka on Windows).
+**Upgrade steps:** `pip install -r requirements.txt`, `alembic upgrade head`, `python -m app.cli seed`.
+**Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
