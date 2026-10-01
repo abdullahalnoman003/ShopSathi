@@ -150,3 +150,7 @@ See the root `README.md`.
 ## Weekly insights (Prompt 18)
 - A week is Monday 00:00 to next Monday 00:00 in Asia/Dhaka; `weekly_insights.week_start` is the Monday. The summary uses only the shop's Messenger **customer** messages (never test chats), after personal details are removed (`shopsathi_ai.insights.redact`); any future AI feature that sends chat text to a model must do the same. Usage is logged under operation `weekly_insights` (one row per model call).
 - Scheduled work runs through Celery beat (`beat_schedule` in `app/workers/celery_app.py`, UTC times); start it with `celery -A app.workers.celery_app beat`.
+
+## Admin panel (Prompt 19)
+- `/api/v1/admin/...` is `platform_admin` only (`require_roles(PLATFORM_ADMIN)`); the admin never reads a shop's chats, messages or customers. Frontend: the `/admin` area has its own layout; the login page sends each role to its own area.
+- Every admin change to a shop or plan is recorded in `admin_actions` (admin user id, time, details). Suspending a shop sets `shops.status = 'suspended'`; all enforcement already reads that status (login and every request, Messenger worker).

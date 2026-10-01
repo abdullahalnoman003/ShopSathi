@@ -1,5 +1,6 @@
 """ORM models. Import every model module here so Alembic sees it."""
 
+from app.models.admin_action import AdminAction
 from app.models.chat import Chat, Message
 from app.models.embedding import AiUsageLog, EmbeddingChunk
 from app.models.facebook import FacebookPage
@@ -14,6 +15,7 @@ from app.models.user import User
 from app.models.weekly_insight import WeeklyInsight
 
 __all__ = [
+    "AdminAction",
     "AiUsageLog",
     "Chat",
     "EmbeddingChunk",
