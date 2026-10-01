@@ -267,12 +267,12 @@ def test_moderators_can_use_notifications_but_anonymous_and_admin_cannot(client,
 def test_seed_creates_flagged_messenger_chats_with_notifications_idempotently(db, monkeypatch):
     monkeypatch.setenv("DEMO_PASSWORD", "demo-password-1")
     assert cli_main(["seed"]) == 0
-    chats = db.scalars(select(Chat).where(Chat.channel == "messenger")).all()
+    chats = db.scalars(select(Chat).where(Chat.channel == "messenger", Chat.customer_psid.like("demo-psid-%"))).all()
     flagged = [c for c in chats if c.is_flagged]
     assert len(chats) == 4 and len(flagged) == 3 and all(c.ai_paused for c in flagged)
     assert sorted(c.flag_reason for c in flagged) == ["complaint", "human_requested", "refund"]
-    assert len(events(db)) == 3
+    assert len([e for e in events(db) if e.chat_id in {c.id for c in chats}]) == 3  # the demo_history chats add more events
     notes = notifications(db)
     assert len(notes) == 3 and sum(n.read_at is None for n in notes) == 2
     assert cli_main(["seed"]) == 0
-    assert len(db.scalars(select(Chat).where(Chat.channel == "messenger")).all()) == 4 and len(notifications(db)) == 3
+    assert len(db.scalars(select(Chat).where(Chat.channel == "messenger", Chat.customer_psid.like("demo-psid-%"))).all()) == 4 and len(notifications(db)) == 3

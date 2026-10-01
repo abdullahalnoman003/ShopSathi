@@ -8,14 +8,15 @@ import secrets
 import sys
 from pathlib import Path
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import select, text
 
 from app.core.config import get_settings
 from app.core.database import SessionLocal
 from app.core.security import hash_password
-from app.models import Chat, HandoverEvent, Message, Notification, Product, Shop, ShopPolicy, User
+from app.models import Chat, HandoverEvent, Message, Notification, Order, Product, Shop, ShopPolicy, User
 from app.schemas.policy import PolicyIn
 from app.services.plans import get_plan_by_code, seed_plans
 from app.services.embeddings import DimensionMismatch, EmbeddingService
@@ -152,6 +153,58 @@ def seed_demo_chats(db) -> None:
         print(f"chats: {created} created for {owner_email}")
 
 
+def seed_demo_history(db) -> None:
+    """About six weeks of fictional Messenger history (chats, AI replies, handovers, orders in every status) so the
+    Reports page and the weekly AI summary can be shown. Skips chats that already exist."""
+    data = json.loads((SEED_DIR / "demo_history.json").read_text(encoding="utf-8"))
+    dhaka = ZoneInfo("Asia/Dhaka")
+    now = datetime.now(timezone.utc)
+    today = now.astimezone(dhaka).date()
+    for owner_email, chats in data.items():
+        if owner_email.startswith("_"):
+            continue
+        owner = db.scalar(select(User).where(User.email == owner_email.lower()))
+        if owner is None or owner.shop_id is None:
+            continue
+        shop_id = owner.shop_id
+        created = 0
+        for item in chats:
+            if db.scalar(select(Chat.id).where(Chat.shop_id == shop_id, Chat.customer_psid == item["psid"])) is not None:
+                continue
+            start = datetime.combine(today - timedelta(days=item["days_ago"]), time(item["hour"], 5), tzinfo=dhaka).astimezone(timezone.utc)
+            start = min(start, now - timedelta(minutes=30))
+            msgs = item["messages"]
+            times = [start + timedelta(seconds=40 * i) for i in range(len(msgs))]
+            last_customer = max(t for t, m in zip(times, msgs) if m["sender"] == "customer")
+            chat = Chat(shop_id=shop_id, channel="messenger", customer_psid=item["psid"], customer_name=item["name"],
+                        ai_disclosure_sent=True, last_customer_message_at=last_customer, created_at=start)
+            db.add(chat)
+            db.flush()
+            for at, m in zip(times, msgs):
+                is_customer = m["sender"] == "customer"
+                db.add(Message(shop_id=shop_id, chat_id=chat.id, sender=m["sender"], text=m["text"], created_at=at,
+                               received_at=at if is_customer else None, sent_at=None if is_customer else at))
+            if item["handover"]:
+                db.add(HandoverEvent(shop_id=shop_id, chat_id=chat.id, reason=item["handover"], created_at=times[-1]))
+            o = item["order"]
+            if o:
+                product = db.scalar(select(Product).where(Product.shop_id == shop_id, Product.name == o["product"]))
+                drafted = times[-1]
+                order = Order(shop_id=shop_id, chat_id=chat.id, product_id=product.id if product else None, product_name=o["product"],
+                              size=o["size"], colour=o["colour"], quantity=o["quantity"], unit_price=product.price if product else 0,
+                              customer_name=o["customer_name"], customer_phone=o["customer_phone"], customer_address=o["customer_address"],
+                              status=o["status"], created_at=drafted)
+                if o["status"] == "confirmed":
+                    order.confirmed_at = min(drafted + timedelta(hours=o["confirmed_after_hours"] or 1), now - timedelta(minutes=1))
+                    order.confirmed_by_user_id = owner.id
+                elif o["status"] == "cancelled":
+                    order.cancelled_at = min(drafted + timedelta(hours=2), now - timedelta(minutes=1))
+                db.add(order)
+            created += 1
+        db.commit()
+        print(f"history: {created} chats created for {owner_email}")
+
+
 def _reembed(shop_ids: list[int], resize_column: bool = False) -> int:
     with SessionLocal() as db:
         svc = EmbeddingService(db)
@@ -223,6 +276,7 @@ def seed() -> int:
         seed_demo_products(db)
         seed_demo_policies(db)
         seed_demo_chats(db)
+        seed_demo_history(db)
     return 0
 
 

@@ -1,0 +1,1231 @@
+{
+ "_note": "Fictional demo history for the Reports page and the weekly AI summary (Prompts 17-18): Messenger chats spread over about six weeks, with handovers and orders in every status. days_ago = Asia/Dhaka calendar days before today, hour = local hour, confirmed_after_hours = how long after drafting the seller confirmed. Names are made up; phone numbers (0170000xxxx) look valid but are fake. Loaded by 'python -m app.cli seed'; chats with a 'hist-*' psid that already exist are skipped. Handovers here are already handled (no notifications).",
+ "rina.demo@example.com": [
+  {
+   "psid": "hist-1001",
+   "name": "Abir Rahman",
+   "days_ago": 25,
+   "hour": 11,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Cotton Panjabi XL size ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Cotton Panjabi XL size ache, 1850 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "eid er jonno 1500 er moddhe panjabi"
+    },
+    {
+     "sender": "ai",
+     "text": "Eid Special Panjabi 1450 taka, size M, L, XL."
+    },
+    {
+     "sender": "customer",
+     "text": "Delivery korte koto din lagbe?"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhaka te 1-2 din, baire 3-5 din."
+    },
+    {
+     "sender": "customer",
+     "text": "product ta kharap chilo, color uthe geche"
+    },
+    {
+     "sender": "ai",
+     "text": "Eta niye dukkhito. Apnar message ta shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": "complaint",
+   "order": null
+  },
+  {
+   "psid": "hist-1002",
+   "name": "Mahmuda Begum",
+   "days_ago": 41,
+   "hour": 11,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Jamdani saree stock ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Red Jamdani Saree stock e ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Red Jamdani Saree price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Red Jamdani Saree er dam 4800 taka. Stock e 6 ta ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Cotton Panjabi nibo, 1 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Cotton Panjabi",
+    "size": "XL",
+    "colour": "Navy",
+    "quantity": 1,
+    "customer_name": "Mahmuda Begum",
+    "customer_phone": "01700001002",
+    "customer_address": "Flat 4B, Green Road, Dhaka",
+    "status": "confirmed",
+    "confirmed_after_hours": 3
+   }
+  },
+  {
+   "psid": "hist-1003",
+   "name": "Sohel Rana",
+   "days_ago": 16,
+   "hour": 20,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Cotton Panjabi XL size ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Cotton Panjabi XL size ache, 1850 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Cash on delivery ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, cash on delivery ache."
+    },
+    {
+     "sender": "customer",
+     "text": "eid er jonno 1500 er moddhe panjabi"
+    },
+    {
+     "sender": "ai",
+     "text": "Eid Special Panjabi 1450 taka, size M, L, XL."
+    },
+    {
+     "sender": "customer",
+     "text": "Red Jamdani Saree nibo, 1 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Red Jamdani Saree",
+    "size": null,
+    "colour": "Red",
+    "quantity": 1,
+    "customer_name": "Sohel Rana",
+    "customer_phone": "01700001003",
+    "customer_address": "Village Rampur, Savar, Dhaka",
+    "status": "confirmed",
+    "confirmed_after_hours": 5
+   }
+  },
+  {
+   "psid": "hist-1004",
+   "name": "Tasnim Ferdous",
+   "days_ago": 40,
+   "hour": 11,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Delivery charge koto Dhaka te?"
+    },
+    {
+     "sender": "ai",
+     "text": "Inside Dhaka delivery charge 60 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Cash on delivery ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, cash on delivery ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Red Jamdani Saree price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Red Jamdani Saree er dam 4800 taka. Stock e 6 ta ache."
+    },
+    {
+     "sender": "customer",
+     "text": "I want a refund"
+    },
+    {
+     "sender": "ai",
+     "text": "I'm sorry about that. I've passed your message to the shop."
+    }
+   ],
+   "handover": "refund",
+   "order": null
+  },
+  {
+   "psid": "hist-1005",
+   "name": "Kabir Ahmed",
+   "days_ago": 8,
+   "hour": 18,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Delivery korte koto din lagbe?"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhaka te 1-2 din, baire 3-5 din."
+    },
+    {
+     "sender": "customer",
+     "text": "Cash on delivery ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, cash on delivery ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Eid Special Panjabi nibo, 2 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Eid Special Panjabi",
+    "size": "L",
+    "colour": "White",
+    "quantity": 2,
+    "customer_name": "Kabir Ahmed",
+    "customer_phone": "01700001005",
+    "customer_address": "Agrabad, Chattogram",
+    "status": "confirmed",
+    "confirmed_after_hours": 2
+   }
+  },
+  {
+   "psid": "hist-1006",
+   "name": "Rumana Haque",
+   "days_ago": 40,
+   "hour": 10,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "eid er jonno 1500 er moddhe panjabi"
+    },
+    {
+     "sender": "ai",
+     "text": "Eid Special Panjabi 1450 taka, size M, L, XL."
+    },
+    {
+     "sender": "customer",
+     "text": "Cash on delivery ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, cash on delivery ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Cotton Panjabi nibo, 1 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Cotton Panjabi",
+    "size": "M",
+    "colour": "White",
+    "quantity": 1,
+    "customer_name": "Rumana Haque",
+    "customer_phone": "01700001006",
+    "customer_address": "Sector 7, Uttara, Dhaka",
+    "status": "cancelled",
+    "confirmed_after_hours": null
+   }
+  },
+  {
+   "psid": "hist-1007",
+   "name": "Shohag Ali",
+   "days_ago": 41,
+   "hour": 15,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Cotton Panjabi XL size ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Cotton Panjabi XL size ache, 1850 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Nakshi Kantha Wall Hanging nibo, 1 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Nakshi Kantha Wall Hanging",
+    "size": null,
+    "colour": "Multicolour",
+    "quantity": 1,
+    "customer_name": "Shohag Ali",
+    "customer_phone": "01700001007",
+    "customer_address": "Boro Bazar, Rajshahi",
+    "status": "confirmed",
+    "confirmed_after_hours": 20
+   }
+  },
+  {
+   "psid": "hist-1008",
+   "name": "Nipa Sarker",
+   "days_ago": 3,
+   "hour": 20,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Mango pickle koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Mango Pickle 500g 450 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Nakshi Kantha price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Nakshi Kantha Wall Hanging er dam 2200 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Delivery charge koto Dhaka te?"
+    },
+    {
+     "sender": "ai",
+     "text": "Inside Dhaka delivery charge 60 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "ami manusher sathe kotha bolte chai"
+    },
+    {
+     "sender": "ai",
+     "text": "Thik ache. Shop-er kauke apnake janachchi."
+    }
+   ],
+   "handover": "human_requested",
+   "order": null
+  },
+  {
+   "psid": "hist-1009",
+   "name": "Zahid Hasan",
+   "days_ago": 18,
+   "hour": 13,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Red Jamdani Saree price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Red Jamdani Saree er dam 4800 taka. Stock e 6 ta ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Return policy ki?"
+    },
+    {
+     "sender": "ai",
+     "text": "Product er problem hole 3 diner moddhe return neya hobe."
+    },
+    {
+     "sender": "customer",
+     "text": "Homemade Mango Pickle (Achar) 500g nibo, 3 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Homemade Mango Pickle (Achar) 500g",
+    "size": "500g",
+    "colour": null,
+    "quantity": 3,
+    "customer_name": "Zahid Hasan",
+    "customer_phone": "01700001009",
+    "customer_address": "House 12, Road 5, Mirpur 10, Dhaka",
+    "status": "confirmed",
+    "confirmed_after_hours": 4
+   }
+  },
+  {
+   "psid": "hist-1010",
+   "name": "Popy Khatun",
+   "days_ago": 30,
+   "hour": 13,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Delivery korte koto din lagbe?"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhaka te 1-2 din, baire 3-5 din."
+    },
+    {
+     "sender": "customer",
+     "text": "Eid Special Panjabi nibo, 1 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Eid Special Panjabi",
+    "size": "XL",
+    "colour": "Cream",
+    "quantity": 1,
+    "customer_name": "Popy Khatun",
+    "customer_phone": "01700001010",
+    "customer_address": "Flat 4B, Green Road, Dhaka",
+    "status": "draft",
+    "confirmed_after_hours": null
+   }
+  },
+  {
+   "psid": "hist-1011",
+   "name": "Arman Sheikh",
+   "days_ago": 2,
+   "hour": 21,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "eid er jonno 1500 er moddhe panjabi"
+    },
+    {
+     "sender": "ai",
+     "text": "Eid Special Panjabi 1450 taka, size M, L, XL."
+    },
+    {
+     "sender": "customer",
+     "text": "Nakshi Kantha price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Nakshi Kantha Wall Hanging er dam 2200 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Red Jamdani Saree price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Red Jamdani Saree er dam 4800 taka. Stock e 6 ta ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Red Jamdani Saree nibo, 1 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Red Jamdani Saree",
+    "size": null,
+    "colour": "Red",
+    "quantity": 1,
+    "customer_name": "Arman Sheikh",
+    "customer_phone": "01700001011",
+    "customer_address": "Village Rampur, Savar, Dhaka",
+    "status": "draft",
+    "confirmed_after_hours": null
+   }
+  },
+  {
+   "psid": "hist-1012",
+   "name": "Ritu Barua",
+   "days_ago": 16,
+   "hour": 11,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Jamdani saree stock ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Red Jamdani Saree stock e ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Cash on delivery ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, cash on delivery ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Do you sell laptops?"
+    },
+    {
+     "sender": "ai",
+     "text": "I'll check with the shop and get back to you."
+    }
+   ],
+   "handover": "not_in_shop_data",
+   "order": null
+  },
+  {
+   "psid": "hist-1013",
+   "name": "Faisal Karim",
+   "days_ago": 9,
+   "hour": 10,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Red Jamdani Saree price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Red Jamdani Saree er dam 4800 taka. Stock e 6 ta ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Cotton Panjabi XL size ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Cotton Panjabi XL size ache, 1850 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Cotton Panjabi nibo, 2 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Cotton Panjabi",
+    "size": "L",
+    "colour": "Maroon",
+    "quantity": 2,
+    "customer_name": "Faisal Karim",
+    "customer_phone": "01700001013",
+    "customer_address": "Agrabad, Chattogram",
+    "status": "confirmed",
+    "confirmed_after_hours": 1
+   }
+  },
+  {
+   "psid": "hist-1014",
+   "name": "Anika Tabassum",
+   "days_ago": 10,
+   "hour": 21,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Delivery korte koto din lagbe?"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhaka te 1-2 din, baire 3-5 din."
+    },
+    {
+     "sender": "customer",
+     "text": "Nakshi Kantha price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Nakshi Kantha Wall Hanging er dam 2200 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Cotton Panjabi nibo, 1 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Cotton Panjabi",
+    "size": "XXL",
+    "colour": "White",
+    "quantity": 1,
+    "customer_name": "Anika Tabassum",
+    "customer_phone": "01700001014",
+    "customer_address": "Sector 7, Uttara, Dhaka",
+    "status": "cancelled",
+    "confirmed_after_hours": null
+   }
+  },
+  {
+   "psid": "hist-1015",
+   "name": "Habib Ullah",
+   "days_ago": 27,
+   "hour": 13,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Cotton Panjabi XL size ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Cotton Panjabi XL size ache, 1850 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Mango pickle koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Mango Pickle 500g 450 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Eid Special Panjabi nibo, 1 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Eid Special Panjabi",
+    "size": "M",
+    "colour": "Cream",
+    "quantity": 1,
+    "customer_name": "Habib Ullah",
+    "customer_phone": "01700001015",
+    "customer_address": "Boro Bazar, Rajshahi",
+    "status": "confirmed",
+    "confirmed_after_hours": 6
+   }
+  },
+  {
+   "psid": "hist-1016",
+   "name": "Sadia Islam",
+   "days_ago": 15,
+   "hour": 10,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Delivery charge koto Dhaka te?"
+    },
+    {
+     "sender": "ai",
+     "text": "Inside Dhaka delivery charge 60 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "eid er jonno 1500 er moddhe panjabi"
+    },
+    {
+     "sender": "ai",
+     "text": "Eid Special Panjabi 1450 taka, size M, L, XL."
+    },
+    {
+     "sender": "customer",
+     "text": "delivery onek deri hocche"
+    },
+    {
+     "sender": "ai",
+     "text": "Eta niye dukkhito. Shop-er kew shigroi reply korbe."
+    }
+   ],
+   "handover": "complaint",
+   "order": null
+  },
+  {
+   "psid": "hist-1017",
+   "name": "Monir Khan",
+   "days_ago": 30,
+   "hour": 10,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "eid er jonno 1500 er moddhe panjabi"
+    },
+    {
+     "sender": "ai",
+     "text": "Eid Special Panjabi 1450 taka, size M, L, XL."
+    },
+    {
+     "sender": "customer",
+     "text": "Red Jamdani Saree price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Red Jamdani Saree er dam 4800 taka. Stock e 6 ta ache."
+    }
+   ],
+   "handover": null,
+   "order": null
+  },
+  {
+   "psid": "hist-1018",
+   "name": "Joya Roy",
+   "days_ago": 15,
+   "hour": 20,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Kothay delivery dewa hoy?"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhaka, Chattogram, Sylhet shohor e delivery dei."
+    }
+   ],
+   "handover": null,
+   "order": null
+  },
+  {
+   "psid": "hist-1019",
+   "name": "Emon Chowdhury",
+   "days_ago": 10,
+   "hour": 13,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Mango pickle koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Mango Pickle 500g 450 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Red Jamdani Saree price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Red Jamdani Saree er dam 4800 taka. Stock e 6 ta ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Khagan e delivery charge koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhaka er baire delivery charge 120 taka."
+    }
+   ],
+   "handover": null,
+   "order": null
+  },
+  {
+   "psid": "hist-1020",
+   "name": "Sumaiya Akter",
+   "days_ago": 10,
+   "hour": 20,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Delivery korte koto din lagbe?"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhaka te 1-2 din, baire 3-5 din."
+    },
+    {
+     "sender": "customer",
+     "text": "???"
+    },
+    {
+     "sender": "ai",
+     "text": "I'll check with the shop and get back to you."
+    }
+   ],
+   "handover": "low_confidence",
+   "order": null
+  },
+  {
+   "psid": "hist-1021",
+   "name": "Rahim Uddin",
+   "days_ago": 22,
+   "hour": 18,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Nakshi Kantha price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Nakshi Kantha Wall Hanging er dam 2200 taka."
+    }
+   ],
+   "handover": null,
+   "order": null
+  },
+  {
+   "psid": "hist-1022",
+   "name": "Farhana Yasmin",
+   "days_ago": 25,
+   "hour": 20,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Return policy ki?"
+    },
+    {
+     "sender": "ai",
+     "text": "Product er problem hole 3 diner moddhe return neya hobe."
+    },
+    {
+     "sender": "customer",
+     "text": "Kothay delivery dewa hoy?"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhaka, Chattogram, Sylhet shohor e delivery dei."
+    }
+   ],
+   "handover": null,
+   "order": null
+  }
+ ],
+ "karim.demo@example.com": [
+  {
+   "psid": "hist-2001",
+   "name": "Arman Sheikh",
+   "days_ago": 30,
+   "hour": 11,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Smart Watch stock ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Smart Watch Black, Silver, Blue stock e ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Delivery charge koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Inside Dhaka 70 taka, baire 130 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Phone back cover Large size ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Large size ache, 250 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "refund chai"
+    },
+    {
+     "sender": "ai",
+     "text": "I'm sorry about that. I've passed your message to the shop."
+    }
+   ],
+   "handover": "refund",
+   "order": null
+  },
+  {
+   "psid": "hist-2002",
+   "name": "Ritu Barua",
+   "days_ago": 40,
+   "hour": 10,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Smart Watch stock ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Smart Watch Black, Silver, Blue stock e ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Wireless Earbuds nibo, 1 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Wireless Earbuds",
+    "size": null,
+    "colour": "Black",
+    "quantity": 1,
+    "customer_name": "Ritu Barua",
+    "customer_phone": "01700002002",
+    "customer_address": "Flat 4B, Green Road, Dhaka",
+    "status": "confirmed",
+    "confirmed_after_hours": 4
+   }
+  },
+  {
+   "psid": "hist-2003",
+   "name": "Faisal Karim",
+   "days_ago": 27,
+   "hour": 10,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Phone back cover Large size ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Large size ache, 250 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Delivery charge koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Inside Dhaka 70 taka, baire 130 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Smart Watch nibo, 1 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Smart Watch",
+    "size": null,
+    "colour": "Blue",
+    "quantity": 1,
+    "customer_name": "Faisal Karim",
+    "customer_phone": "01700002003",
+    "customer_address": "Village Rampur, Savar, Dhaka",
+    "status": "confirmed",
+    "confirmed_after_hours": 8
+   }
+  },
+  {
+   "psid": "hist-2004",
+   "name": "Anika Tabassum",
+   "days_ago": 6,
+   "hour": 20,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Wireless Earbuds price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Wireless Earbuds er dam 1450 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Phone back cover Large size ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Large size ache, 250 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Warranty ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Product er jonno 7 diner replacement ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Phone Back Cover nibo, 2 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Phone Back Cover",
+    "size": "Medium",
+    "colour": "Clear",
+    "quantity": 2,
+    "customer_name": "Anika Tabassum",
+    "customer_phone": "01700002004",
+    "customer_address": "Zindabazar, Sylhet",
+    "status": "draft",
+    "confirmed_after_hours": null
+   }
+  },
+  {
+   "psid": "hist-2005",
+   "name": "Habib Ullah",
+   "days_ago": 16,
+   "hour": 18,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Wireless Earbuds price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Wireless Earbuds er dam 1450 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Warranty ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Product er jonno 7 diner replacement ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Delivery charge koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Inside Dhaka 70 taka, baire 130 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "kothao manush er sathe kotha bolbo"
+    },
+    {
+     "sender": "ai",
+     "text": "Thik ache. Shop-er kauke janachchi."
+    }
+   ],
+   "handover": "human_requested",
+   "order": null
+  },
+  {
+   "psid": "hist-2006",
+   "name": "Sadia Islam",
+   "days_ago": 36,
+   "hour": 13,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Smart Watch stock ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Smart Watch Black, Silver, Blue stock e ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Warranty ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Product er jonno 7 diner replacement ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Wireless Earbuds nibo, 1 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Wireless Earbuds",
+    "size": null,
+    "colour": "White",
+    "quantity": 1,
+    "customer_name": "Sadia Islam",
+    "customer_phone": "01700002006",
+    "customer_address": "Sector 7, Uttara, Dhaka",
+    "status": "cancelled",
+    "confirmed_after_hours": null
+   }
+  },
+  {
+   "psid": "hist-2007",
+   "name": "Monir Khan",
+   "days_ago": 30,
+   "hour": 20,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Phone back cover Large size ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Large size ache, 250 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Wireless Earbuds price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Wireless Earbuds er dam 1450 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Smart Watch nibo, 1 ta"
+    },
+    {
+     "sender": "ai",
+     "text": "Dhonnobad! Apnar order-er details shop-er kache pathiye diyechi."
+    }
+   ],
+   "handover": null,
+   "order": {
+    "product": "Smart Watch",
+    "size": null,
+    "colour": "Silver",
+    "quantity": 1,
+    "customer_name": "Monir Khan",
+    "customer_phone": "01700002007",
+    "customer_address": "Boro Bazar, Rajshahi",
+    "status": "confirmed",
+    "confirmed_after_hours": 30
+   }
+  },
+  {
+   "psid": "hist-2008",
+   "name": "Joya Roy",
+   "days_ago": 22,
+   "hour": 18,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Power bank ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Power Bank 10000mAh ekhon stock e nei."
+    },
+    {
+     "sender": "customer",
+     "text": "Smart Watch stock ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Smart Watch Black, Silver, Blue stock e ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Delivery charge koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Inside Dhaka 70 taka, baire 130 taka."
+    }
+   ],
+   "handover": null,
+   "order": null
+  },
+  {
+   "psid": "hist-2009",
+   "name": "Emon Chowdhury",
+   "days_ago": 36,
+   "hour": 11,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Wireless Earbuds price koto?"
+    },
+    {
+     "sender": "ai",
+     "text": "Wireless Earbuds er dam 1450 taka."
+    },
+    {
+     "sender": "customer",
+     "text": "Power bank ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Power Bank 10000mAh ekhon stock e nei."
+    },
+    {
+     "sender": "customer",
+     "text": "Smart Watch stock ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Smart Watch Black, Silver, Blue stock e ache."
+    }
+   ],
+   "handover": null,
+   "order": null
+  },
+  {
+   "psid": "hist-2010",
+   "name": "Sumaiya Akter",
+   "days_ago": 22,
+   "hour": 18,
+   "messages": [
+    {
+     "sender": "customer",
+     "text": "Smart Watch stock ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Smart Watch Black, Silver, Blue stock e ache."
+    },
+    {
+     "sender": "customer",
+     "text": "Phone back cover Large size ache?"
+    },
+    {
+     "sender": "ai",
+     "text": "Ji, Large size ache, 250 taka."
+    }
+   ],
+   "handover": null,
+   "order": null
+  }
+ ]
+}

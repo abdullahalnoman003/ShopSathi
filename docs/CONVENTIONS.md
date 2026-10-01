@@ -143,3 +143,6 @@ See the root `README.md`.
 ## Orders dashboard & CSV export (Prompt 16)
 - `/api/v1/orders...` is owner + moderator, `is_test = false` only. Only drafts can be edited, confirmed or cancelled (else 409); only a person confirms. The unit price is never edited: it comes from the catalogue when the product changes.
 - The courier CSV is UTF-8 with BOM, CRLF lines, columns `order_id, confirmed_at, customer_name, customer_phone, customer_address, product_name, size, colour, quantity, unit_price, total_price`; date filters are Asia/Dhaka days, both included. Any future export of customer-written text must neutralise leading `= + - @` the same way (`_safe_cell`).
+
+## Reports (Prompt 17)
+- Report counts (owner only) always exclude `chats.channel = 'test'` and `orders.is_test`, use Asia/Dhaka calendar days with both ends included, count "messages handled by AI" as AI messages with `sent_at` set (a reply that was never delivered is not handled), and "chats handed to humans" as distinct chats with a `handover_events` row. Later reports (Prompt 18 insights) must follow the same rules.
