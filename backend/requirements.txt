@@ -1,0 +1,17 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+SQLAlchemy>=2.0
+psycopg[binary]>=3.2
+alembic>=1.13
+pgvector>=0.3
+pydantic-settings>=2.4
+celery>=5.4
+redis>=5.0
+passlib>=1.7
+bcrypt>=4.0,<5
+PyJWT>=2.8
+pandas>=2.2
+openpyxl>=3.1
+httpx>=0.27
+pytest>=8
+-e ../ai_engine

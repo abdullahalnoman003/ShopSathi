@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shopsathi-ai"
+version = "0.1.0"
+description = "ShopSathi AI engine layer (independent package; never imports backend)."
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2",
+    "pydantic-settings>=2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+include = ["shopsathi_ai*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
