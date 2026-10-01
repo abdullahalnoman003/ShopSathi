@@ -26,6 +26,8 @@ def log_ai_usage(
     model: str,
     input_tokens: int,
     output_tokens: int = 0,
+    *,
+    commit: bool = True,
 ) -> AiUsageLog:
     row = AiUsageLog(
         shop_id=shop_id,
@@ -37,5 +39,6 @@ def log_ai_usage(
         estimated_cost=estimate_cost(model, input_tokens, output_tokens),
     )
     db.add(row)
-    db.commit()
+    if commit:
+        db.commit()
     return row

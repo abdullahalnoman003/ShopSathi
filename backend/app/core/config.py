@@ -32,7 +32,15 @@ class Settings(BaseSettings):
     ai_cost_rates: dict[str, dict[str, float]] = {
         "text-embedding-3-small": {"input_per_1m": 0.02},
         "text-embedding-3-large": {"input_per_1m": 0.13},
+        "gpt-4o-mini": {"input_per_1m": 0.15, "output_per_1m": 0.60},
+        "gemini-2.0-flash": {"input_per_1m": 0.10, "output_per_1m": 0.40},
     }
+
+    # Chat pipeline
+    chat_memory_turns: int = 8  # last N turns of a chat kept in Redis as short-term memory
+    chat_memory_ttl_seconds: int = 21600  # memory expires 6 hours after the last message
+    rag_min_score: float = 0.2  # retrieved chunks below this similarity are ignored
+    rag_min_product_score: float = 0.3  # semantic product matches below this similarity are ignored
 
     # Background jobs: run Celery tasks inline (used by automated tests only)
     celery_task_always_eager: bool = False

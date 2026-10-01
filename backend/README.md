@@ -11,3 +11,5 @@ pytest
 python -m app.cli --help
 python -m app.cli reembed-all                       # (re)build all embeddings; needs no worker
 ```
+
+AI checks (see docs/PROGRESS.md): `python scripts/check_chat_examples.py` (proposal example messages and reply time), `python scripts/check_semantic_search.py`, `python scripts/check_embedding_latency.py`.

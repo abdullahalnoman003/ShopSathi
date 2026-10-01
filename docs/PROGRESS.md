@@ -85,3 +85,19 @@
 **Scripts:** `backend/scripts/check_embedding_latency.py` (AI-R13 timing), `backend/scripts/check_semantic_search.py` (needs a real provider).
 **Upgrade steps:** `pip install -r requirements.txt`, `alembic upgrade head`, `python -m app.cli reembed-all` (builds embeddings for existing products/policies), start the Celery worker.
 **Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
+
+## Prompt 9 — AI chat replies & Test chat window
+**Built:**
+- AI engine: `LLMProvider` with token usage (`openai` GPT-4o-mini and `gemini` Flash through LangChain in JSON mode, plus a rule-based `mock` test double); `language.py`; `understanding.py` (validated intent/entities, one retry); `tools.py`; `reply.py` (answer only from facts, number-grounding check, one regeneration, then the "I'll check with the shop" fallback); `engine.py` (`ConversationEngine.process_customer_message` -> `EngineResult` with reply, intent, entities, confidence, style, handover, extras, usage); prompt files in `shopsathi_ai/prompts/`.
+- Backend: `chats` and `messages` tables; gateway tool methods; Redis `ChatMemoryService`; `ConversationService.handle_customer_message` (the single entry point for Prompt 14); owner-only test-chat API; usage logging (`intent`, `chat_reply`, `embedding`).
+- Frontend: "Test chat" page (Messenger-style bubbles, thinking indicator, new conversation, previous conversations, visible "nothing is sent to Facebook" label, responsive).
+
+**Tables (migration 0007):** `chats`, `messages`.
+**Endpoints (owner only):** `POST /api/v1/test-chat/sessions`, `GET /api/v1/test-chat/sessions`, `GET /api/v1/test-chat/sessions/{id}/messages`, `POST /api/v1/test-chat/sessions/{id}/messages`.
+**Pages:** `/dashboard/test-chat`.
+**New env vars (backend):** `CHAT_MEMORY_TURNS`, `CHAT_MEMORY_TTL_SECONDS`, `RAG_MIN_SCORE`, `RAG_MIN_PRODUCT_SCORE` (and `LLM_PROVIDER` / `LLM_MODEL` now select real models; cost rates for gpt-4o-mini and gemini-2.0-flash added to `AI_COST_RATES`). New optional `ai_engine` extras: `openai`, `gemini`, `llm`.
+**Scripts:** `backend/scripts/check_chat_examples.py` (proposal example messages + reply time; needs a real LLM key to judge quality).
+**Upgrade steps:** `pip install -r requirements.txt` (and `pip install -e "../ai_engine[llm]"` for real models), `alembic upgrade head`.
+**Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
+
+**Prompt 9 — verification with a real model (gpt-4o-mini + text-embedding-3-small):** the proposal's example messages were run against the demo shop: replies used catalogue prices/stock exactly, answered in the customer's style (Banglish, English, Bangla script) and unknown questions got "I'll check with the shop". Reply time 1.9-4.5 s (target 8 s). Findings fixed: product/colour are now normalised to English by the understanding step (`product_name_en`) so Bangla-script questions find products; "eta" is resolved to the most recent product; replies use ASCII digits unless the customer wrote Bangla. `backend/scripts/debug_chat.py` prints what the AI understood and retrieved for any messages.

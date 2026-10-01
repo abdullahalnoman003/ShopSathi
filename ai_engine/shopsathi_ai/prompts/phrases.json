@@ -1,0 +1,28 @@
+{
+  "disclosure": {
+    "english": "Hi! I'm the automatic assistant of {{shop_name}}. I can help with our products, prices and delivery. If you would like to talk to a person, just ask.",
+    "banglish": "Assalamu alaikum! Ami {{shop_name}}-er automatic assistant. Product, dam ar delivery niye help korte pari. Kono manusher sathe kotha bolte chaile bolben.",
+    "bangla": "আসসালামু আলাইকুম! আমি {{shop_name}}-এর স্বয়ংক্রিয় সহকারী। পণ্য, দাম ও ডেলিভারি নিয়ে সাহায্য করতে পারি। কারও সাথে কথা বলতে চাইলে বলুন।"
+  },
+  "check_with_shop": {
+    "english": "I'll check with the shop and get back to you.",
+    "banglish": "Ami shop-er sathe check kore apnake janacchi.",
+    "bangla": "আমি দোকানের সাথে জেনে আপনাকে জানাচ্ছি।"
+  },
+  "ask_product": {
+    "english": "Which product do you mean? Please tell me the product name.",
+    "banglish": "Kon product-er kotha bolchen? Product-er naam ta bolben, please.",
+    "bangla": "কোন পণ্যের কথা বলছেন? অনুগ্রহ করে পণ্যের নামটি বলুন।"
+  },
+  "ask_area": {
+    "english": "Which area should we deliver to? Please tell me the area name.",
+    "banglish": "Kon area-te delivery lagbe? Area-r naam ta bolben, please.",
+    "bangla": "কোন এলাকায় ডেলিভারি লাগবে? অনুগ্রহ করে এলাকার নামটি বলুন।"
+  },
+  "greeting": {
+    "english": "How can I help you today?",
+    "banglish": "Bolun, ki help korte pari?",
+    "bangla": "বলুন, কীভাবে সাহায্য করতে পারি?"
+  },
+  "greeting_words": ["hi", "hello", "hey", "hii", "assalamu", "assalamualaikum", "salam", "salaam", "thanks", "thank", "thanku", "ok", "okay", "dhonnobad", "dhonnobaad", "shukriya", "হাই", "হ্যালো", "হেলো", "আসসালামু", "সালাম", "ধন্যবাদ", "ঠিকআছে", "ওকে"]
+}

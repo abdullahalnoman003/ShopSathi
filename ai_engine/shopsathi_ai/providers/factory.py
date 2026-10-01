@@ -7,8 +7,15 @@ def get_llm_provider(settings: AISettings | None = None) -> LLMProvider:
     settings = settings or get_ai_settings()
     if settings.llm_provider == "mock":
         return MockLLMProvider()
-    # Real OpenAI / Gemini LLM implementations arrive in Prompt 9.
-    raise NotImplementedError(f"LLM provider '{settings.llm_provider}' is not implemented yet")
+    if settings.llm_provider == "openai":
+        from shopsathi_ai.providers.langchain_chat import build_openai
+
+        return build_openai(settings.openai_api_key, settings.llm_model)
+    if settings.llm_provider == "gemini":
+        from shopsathi_ai.providers.langchain_chat import build_gemini
+
+        return build_gemini(settings.gemini_api_key, settings.llm_model)
+    raise ValueError(f"Unknown LLM provider '{settings.llm_provider}'")
 
 
 def get_embedding_provider(settings: AISettings | None = None) -> EmbeddingProvider:

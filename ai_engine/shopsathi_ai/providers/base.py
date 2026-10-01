@@ -3,12 +3,39 @@ from dataclasses import dataclass
 from typing import Any
 
 
+class LLMProviderError(RuntimeError):
+    """An LLM call failed (network, rate limit, unusable response). Callers fall back safely."""
+
+
+@dataclass(frozen=True)
+class LLMResult:
+    """A parsed JSON answer plus the token usage needed for per-shop cost logging (NFR-08)."""
+
+    data: dict[str, Any]
+    input_tokens: int
+    output_tokens: int
+    provider: str
+    model: str
+
+
 class LLMProvider(ABC):
     """Chat-completion provider returning structured JSON."""
 
+    #: short provider name used in usage logs, e.g. "openai"
+    name: str = "unknown"
+    #: model name used in usage logs and cost lookup
+    model: str = "unknown"
+
     @abstractmethod
+    def generate_json_with_usage(self, system_prompt: str, user_prompt: str, *, task: str = "generic") -> LLMResult:
+        """Return the model's reply parsed as a JSON object, with token usage.
+
+        ``task`` names the step ("understand" or "reply"); real models ignore it, test doubles use it.
+        """
+
     def generate_json(self, system_prompt: str, user_prompt: str) -> dict[str, Any]:
         """Return the model's reply parsed as a JSON object."""
+        return self.generate_json_with_usage(system_prompt, user_prompt).data
 
 
 class EmbeddingProviderError(RuntimeError):

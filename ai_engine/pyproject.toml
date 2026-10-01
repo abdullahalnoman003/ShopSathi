@@ -17,9 +17,16 @@ dependencies = [
 dev = ["pytest>=8"]
 # multilingual local embedding model (large download: torch)
 local = ["sentence-transformers>=3"]
+# real chat models through LangChain
+openai = ["langchain-openai>=0.2"]
+gemini = ["langchain-google-genai>=2"]
+llm = ["langchain-core>=0.3", "langchain-openai>=0.2", "langchain-google-genai>=2"]
 
 [tool.setuptools.packages.find]
 include = ["shopsathi_ai*"]
+
+[tool.setuptools.package-data]
+"shopsathi_ai.prompts" = ["*.md", "*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
