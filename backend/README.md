@@ -13,3 +13,5 @@ python -m app.cli reembed-all                       # (re)build all embeddings; 
 ```
 
 AI checks (see docs/PROGRESS.md): `python scripts/check_chat_examples.py` (proposal example messages and reply time), `python scripts/check_semantic_search.py`, `python scripts/check_embedding_latency.py`.
+
+Local demo of the Facebook Page connection without a Meta app: `uvicorn --app-dir scripts fake_facebook:app --port 8099` (see the header of `scripts/fake_facebook.py` for the backend settings to use).

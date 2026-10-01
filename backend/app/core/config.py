@@ -36,6 +36,20 @@ class Settings(BaseSettings):
         "gemini-2.0-flash": {"input_per_1m": 0.10, "output_per_1m": 0.40},
     }
 
+    # Facebook Page connection (Meta Messenger Platform). All from the environment, never in code.
+    fb_app_id: str = ""
+    fb_app_secret: str = ""
+    fb_graph_api_version: str = "v21.0"  # check Meta's changelog: old versions are retired after ~2 years
+    #: where Facebook sends the browser back after login: this backend's /api/v1/facebook/callback
+    fb_oauth_redirect_uri: str = ""
+    #: Fernet key used to encrypt Page tokens at rest (NFR-03)
+    fb_token_encryption_key: str = ""
+    #: where the browser is sent after Facebook login; falls back to FRONTEND_ORIGIN when empty
+    frontend_url: str = ""
+    # Dev/test only: point at a local fake Facebook (backend/scripts/fake_facebook.py). Leave the defaults in production.
+    fb_graph_base_url: str = "https://graph.facebook.com"
+    fb_dialog_base_url: str = "https://www.facebook.com"
+
     # Chat pipeline
     chat_memory_turns: int = 8  # last N turns of a chat kept in Redis as short-term memory
     chat_memory_ttl_seconds: int = 21600  # memory expires 6 hours after the last message

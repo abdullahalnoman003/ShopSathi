@@ -2,6 +2,7 @@
 
 from app.models.chat import Chat, Message
 from app.models.embedding import AiUsageLog, EmbeddingChunk
+from app.models.facebook import FacebookPage
 from app.models.handover import HandoverEvent, Notification
 from app.models.order import Order
 from app.models.password_reset_token import PasswordResetToken
@@ -17,6 +18,7 @@ __all__ = [
     "EmbeddingChunk",
     "DeliveryArea",
     "PasswordResetToken",
+    "FacebookPage",
     "HandoverEvent",
     "Message",
     "Notification",

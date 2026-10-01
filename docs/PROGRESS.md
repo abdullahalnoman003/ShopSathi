@@ -142,3 +142,14 @@
 **Real-model check** (gpt-4o-mini): complaint, refund request, off-topic (cricket), "Do you sell laptops?" (not in shop data), "I want to talk to a person" and abuse each flagged with the right reason and the AI stopped replying; "refund policy ki?" is not flagged. Found and fixed: the model wrote `intent: "off_topic"` (outside the seven intents), which made the whole understanding invalid; it is now mapped to the `off_topic` flag.
 **Upgrade steps:** `alembic upgrade head`.
 **Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
+
+## Prompt 13 — Facebook Page connection
+**Built:** the owner can connect and disconnect one Facebook Page per shop through Facebook Login. `GraphClient` (httpx; reused by Prompt 14), `TokenCipher` (Fernet) for Page tokens at rest, signed expiring one-use OAuth `state`, short-term encrypted Page list in Redis, webhook subscription to the Page's `messages` field on connect and best-effort unsubscribe on disconnect, clear errors (missing app settings, denied or missing permissions, expired state, Page already used by another shop). Frontend: owner-only "Facebook Page" settings page (status card, Connect button, Page selection after returning from Facebook, Disconnect with confirmation). `backend/scripts/fake_facebook.py` is a fake Facebook for local demos.
+
+**Tables (migration 0010):** `facebook_pages` (`shop_id` unique, `page_id` unique, `encrypted_page_token`).
+**Endpoints:** `GET /api/v1/facebook/connect-url`, `GET /api/v1/facebook/callback` (public, state-protected), `GET /api/v1/facebook/pages/available`, `POST /api/v1/facebook/pages/connect`, `GET /api/v1/facebook/page`, `POST /api/v1/facebook/page/disconnect` (all but the callback owner only).
+**Pages:** `/dashboard/facebook` (nav item "Facebook Page", owner only).
+**New env vars (backend):** `FB_APP_ID`, `FB_APP_SECRET`, `FB_GRAPH_API_VERSION`, `FB_OAUTH_REDIRECT_URI`, `FB_TOKEN_ENCRYPTION_KEY`, `FRONTEND_URL`; dev/test only `FB_GRAPH_BASE_URL`, `FB_DIALOG_BASE_URL`. New dependencies: `cryptography`; tests: `respx`.
+**Verification:** automated tests mock the Graph API (respx). The browser flow was run end to end against the local fake Facebook (login round-trip, Page selection, connect, subscription, disconnect, cancelled login, missing settings). **Not run against real Facebook: no Meta app / test Page credentials were available (Milestone M2 is pending real credentials).**
+**Upgrade steps:** `pip install -r requirements.txt`, `alembic upgrade head`, then the six `FB_*` settings in `backend/.env`.
+**Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.

@@ -1,6 +1,8 @@
 import os
 import tempfile
 
+from cryptography.fernet import Fernet
+
 # Point the whole app at the test database and a separate Redis db BEFORE the app is imported.
 from app.core.config import get_settings
 
@@ -11,6 +13,16 @@ os.environ["CELERY_TASK_ALWAYS_EAGER"] = "true"  # run background jobs inline in
 os.environ["EMBEDDING_PROVIDER"] = "mock"  # never call a real provider from tests
 os.environ["LLM_PROVIDER"] = "mock"
 os.environ["EMBEDDING_DIM"] = "1536"
+os.environ.update(  # a fake Meta app: no test ever talks to Facebook
+    FB_APP_ID="1234567890",
+    FB_APP_SECRET="test-app-secret",
+    FB_GRAPH_API_VERSION="v21.0",
+    FB_OAUTH_REDIRECT_URI="http://testserver/api/v1/facebook/callback",
+    FB_TOKEN_ENCRYPTION_KEY=Fernet.generate_key().decode(),
+    FRONTEND_URL="http://localhost:3000",
+    FB_GRAPH_BASE_URL="https://graph.facebook.com",
+    FB_DIALOG_BASE_URL="https://www.facebook.com",
+)
 os.environ["MEDIA_ROOT"] = tempfile.mkdtemp(prefix="shopsathi-test-media-")
 get_settings.cache_clear()
 
