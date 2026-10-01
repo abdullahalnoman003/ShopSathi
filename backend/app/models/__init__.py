@@ -11,6 +11,7 @@ from app.models.policy import DeliveryArea, ShopPolicy
 from app.models.product import Product
 from app.models.shop import Shop
 from app.models.user import User
+from app.models.weekly_insight import WeeklyInsight
 
 __all__ = [
     "AiUsageLog",
@@ -30,4 +31,5 @@ __all__ = [
     "ShopPolicy",
     "SimulatedPayment",
     "User",
+    "WeeklyInsight",
 ]

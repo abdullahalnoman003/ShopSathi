@@ -146,3 +146,7 @@ See the root `README.md`.
 
 ## Reports (Prompt 17)
 - Report counts (owner only) always exclude `chats.channel = 'test'` and `orders.is_test`, use Asia/Dhaka calendar days with both ends included, count "messages handled by AI" as AI messages with `sent_at` set (a reply that was never delivered is not handled), and "chats handed to humans" as distinct chats with a `handover_events` row. Later reports (Prompt 18 insights) must follow the same rules.
+
+## Weekly insights (Prompt 18)
+- A week is Monday 00:00 to next Monday 00:00 in Asia/Dhaka; `weekly_insights.week_start` is the Monday. The summary uses only the shop's Messenger **customer** messages (never test chats), after personal details are removed (`shopsathi_ai.insights.redact`); any future AI feature that sends chat text to a model must do the same. Usage is logged under operation `weekly_insights` (one row per model call).
+- Scheduled work runs through Celery beat (`beat_schedule` in `app/workers/celery_app.py`, UTC times); start it with `celery -A app.workers.celery_app beat`.

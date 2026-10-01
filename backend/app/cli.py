@@ -8,7 +8,7 @@ import secrets
 import sys
 from pathlib import Path
 
-from datetime import datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import select, text
@@ -242,6 +242,29 @@ def reembed_all(resize_column: bool) -> int:
     return _reembed(ids, resize_column)
 
 
+def generate_insights(shop_id: int, week_start: str | None) -> int:
+    """Generate the weekly AI summary for one shop (testing and demos). Prints the result."""
+    from app.services.insights import InsightsService, monday_of, previous_week_start
+
+    week = date.fromisoformat(week_start) if week_start else previous_week_start()
+    if week != monday_of(week):
+        print(f"{week} is not a Monday: use the Monday that starts the week.", file=sys.stderr)
+        return 2
+    with SessionLocal() as db:
+        if db.get(Shop, shop_id) is None:
+            print(f"No shop with id {shop_id}.", file=sys.stderr)
+            return 2
+        row = InsightsService(db).generate_for_shop(shop_id, week)
+        print(f"shop {shop_id}, week starting {row.week_start}")
+        print("Top questions:")
+        for q in row.top_questions:
+            print(f"  {q['count']:>3} x {q['question']}")
+        print("Products customers asked for that the shop does not have:")
+        for p in row.missing_products:
+            print(f"  {p['count']:>3} x {p['name']}")
+    return 0
+
+
 def seed() -> int:
     """Upsert the plans, create the fictional demo shops with their demo products and policies from database/seed/demo_shops.json (idempotent)."""
     demos = json.loads((SEED_DIR / "demo_shops.json").read_text(encoding="utf-8"))
@@ -294,6 +317,9 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="also change the vector column to EMBEDDING_DIM (empties and rebuilds all embeddings)",
     )
+    p_ins = sub.add_parser("generate-insights", help="generate the weekly AI summary of one shop (uses the AI provider)")
+    p_ins.add_argument("--shop-id", type=int, required=True)
+    p_ins.add_argument("--week-start", help="the Monday that starts the week, YYYY-MM-DD (default: last week)")
     sub.add_parser("seed", help="create fictional demo shops and owners (idempotent)")
     args = parser.parse_args(argv)
     if args.command == "create-admin":
@@ -302,6 +328,8 @@ def main(argv: list[str] | None = None) -> int:
         return reembed_shop(args.shop_id)
     if args.command == "reembed-all":
         return reembed_all(args.resize_column)
+    if args.command == "generate-insights":
+        return generate_insights(args.shop_id, args.week_start)
     if args.command == "seed":
         return seed()
     parser.print_help()

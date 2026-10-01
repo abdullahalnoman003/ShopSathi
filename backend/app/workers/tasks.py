@@ -53,3 +53,18 @@ def process_incoming_message(self, message_id: int) -> None:
         raise self.retry(countdown=3, exc=e)  # another worker is on this chat: keep the order
     except Exception as e:
         logger.exception("process_incoming_message(%s) failed: %s", message_id, e.__class__.__name__)
+
+
+@celery_app.task(name="shopsathi.generate_weekly_insights")
+def generate_weekly_insights(week_start: str | None = None) -> dict[str, int]:
+    """Weekly job (celery beat): the AI summary of the previous week for every active shop. Shops that already have
+    one are skipped, so a repeated run does no extra AI work. A failing shop is logged and does not stop the rest."""
+    from datetime import date
+
+    from app.services.insights import InsightsService, previous_week_start
+
+    week = date.fromisoformat(week_start) if week_start else previous_week_start()
+    with SessionLocal() as db:
+        result = InsightsService(db).generate_for_all(week)
+    logger.info("weekly insights for week %s: %s", week, result)
+    return result

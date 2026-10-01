@@ -8,8 +8,9 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_shop_id, require_owner
 from app.core.config import get_settings
 from app.core.database import get_db
-from app.models import Chat, HandoverEvent, Message, Order
-from app.schemas.reports import ReportSummary
+from app.models import Chat, HandoverEvent, Message, Order, WeeklyInsight
+from app.schemas.reports import ReportSummary, WeeklyInsightOut, WeeklyInsightWeek
+from app.services.tenant import scoped_select
 
 # Reports (FR-14): owner only. Counts come straight from the records, always for the caller's shop, and never
 # include Test chat window data (chat channel 'test', orders with is_test).
@@ -73,3 +74,24 @@ def summary(
         orders_drafted=drafted or 0,
         orders_confirmed=confirmed or 0,
     )
+
+
+def _week_out(row: WeeklyInsight) -> dict:
+    return dict(week_start=row.week_start, week_end=row.week_start + timedelta(days=6), generated_at=row.created_at)
+
+
+@router.get("/weekly-insights", response_model=list[WeeklyInsightWeek])
+def list_weekly_insights(shop_id: int = Depends(get_current_shop_id), db: Session = Depends(get_db)):
+    """The weeks that have an AI summary, newest first."""
+    rows = db.scalars(scoped_select(WeeklyInsight, shop_id).order_by(WeeklyInsight.week_start.desc()).limit(104)).all()
+    return [WeeklyInsightWeek(**_week_out(r)) for r in rows]
+
+
+@router.get("/weekly-insights/{week_start}", response_model=WeeklyInsightOut)
+def get_weekly_insight(week_start: date, shop_id: int = Depends(get_current_shop_id), db: Session = Depends(get_db)):
+    if week_start.weekday() != 0:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "A week starts on a Monday.")
+    row = db.scalars(scoped_select(WeeklyInsight, shop_id).where(WeeklyInsight.week_start == week_start)).first()
+    if row is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "There is no summary for this week yet.")
+    return WeeklyInsightOut(**_week_out(row), top_questions=row.top_questions, missing_products=row.missing_products)

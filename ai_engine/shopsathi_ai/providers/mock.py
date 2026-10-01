@@ -69,11 +69,50 @@ class MockLLMProvider(LLMProvider):
             data = self._needs(payload)
         elif task == "reply":
             data = self._reply(payload)
+        elif task == "insights_map":
+            data = self._insights_map(payload)
+        elif task == "insights_reduce":
+            data = self._insights_reduce(payload)
         else:
             data = {"mock": True, "echo": user_prompt}
         tokens_in = len(system_prompt.split()) + len(user_prompt.split())
         tokens_out = len(json.dumps(data, ensure_ascii=False).split())
         return LLMResult(data, tokens_in, tokens_out, self.name, self.model)
+
+    # ---- weekly insights: group messages by the keyword intent (not real understanding) ----
+
+    _QUESTION_TEXT = {
+        "price": "Asks the price of a product",
+        "size_stock": "Asks if a size or product is in stock",
+        "delivery": "Asks about delivery and its charge",
+        "suggestion": "Asks for product suggestions",
+        "order": "Wants to order a product",
+        "complaint": "Complains or asks about a problem",
+        "other": "Other questions",
+    }
+
+    def _insights_map(self, payload: dict[str, Any]) -> dict[str, Any]:
+        questions: dict[str, int] = {}
+        products: dict[str, int] = {}
+        for message in payload.get("messages", []):
+            understood = self._understand({"message": message})
+            text = self._QUESTION_TEXT.get(understood["intent"], "Other questions")
+            questions[text] = questions.get(text, 0) + 1
+            name = (understood["entities"].get("product_name") or "").strip().lower()
+            if name:
+                products[name] = products.get(name, 0) + 1
+        return {
+            "questions": [{"question": q, "count": c} for q, c in sorted(questions.items(), key=lambda kv: -kv[1])],
+            "products": [{"name": n, "count": c} for n, c in sorted(products.items(), key=lambda kv: -kv[1])],
+        }
+
+    def _insights_reduce(self, payload: dict[str, Any]) -> dict[str, Any]:
+        merged: dict[str, int] = {}
+        for items in payload.get("lists", []):
+            for item in items:
+                merged[item["question"]] = merged.get(item["question"], 0) + int(item["count"])
+        top = sorted(merged.items(), key=lambda kv: -kv[1])[:5]
+        return {"questions": [{"question": q, "count": c} for q, c in top]}
 
     # ---- understand: keyword rules ----
 
