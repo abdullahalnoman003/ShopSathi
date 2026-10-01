@@ -29,6 +29,20 @@ Frontend route groups reserved for later prompts: `src/app/(auth)`, `src/app/(da
 - Frontend: token in `localStorage` (`src/lib/auth/storage.ts`), attached by `apiFetch`; a 401 clears it and redirects to `/login`. Auth state via `useAuth()` (`src/lib/auth/AuthProvider.tsx`). Auth pages live in `src/app/(auth)`, protected pages in `src/app/(dashboard)`.
 - Demo/test email addresses must use a valid domain such as `example.com` (`.test` is rejected by the email validator).
 
+## Roles & access matrix
+Roles live in `app/core/roles.py` (`OWNER`, `MODERATOR`, `PLATFORM_ADMIN`). Reusable dependencies in `app/api/deps.py`: `require_owner`, `require_shop_user` (owner or moderator), built on `require_roles`. **Every later module must enforce this matrix** (backend dependency + frontend nav/`RoleGuard`):
+
+| Area | Owner | Moderator |
+|---|---|---|
+| Staff accounts, plan, Facebook Page connection, shop deletion | yes | no |
+| Products, CSV/Excel import, shop policy | yes | no |
+| Test chat window, reports & weekly insights | yes | no |
+| Chat inbox, flagged chats, pause/resume AI, manual replies | yes | yes |
+| Order drafts: confirm/edit/cancel, export CSV | yes | yes |
+
+- The platform admin uses only the admin panel endpoints (Prompt 19) and is never treated as a shop user: `require_owner` / `require_shop_user` reject it and `get_current_shop_id` gives it no shop.
+- Frontend: nav items declare their `roles` in `src/app/(dashboard)/layout.tsx`; pages wrap their content in `RoleGuard` / `OwnerOnly` (`src/components/RoleGuard.tsx`) so a direct URL shows "Not allowed". Hiding in the UI is convenience only; the backend dependency is the real check.
+
 ## Plans & message limits
 - Plans (`free` / `basic` / `pro`) live in the `plans` table, seeded from `database/seed/plans.json` by `python -m app.cli seed`. **Prices and limits are placeholders (team to decide).** Every shop has a `plan_id`. Payments are simulated only (`simulated_payments`, no gateway, no card/bKash/Nagad data); paid plans need `simulated_payment_confirmed: true`.
 - **Counting rule:** one count = one AI reply sent to a customer on Messenger. Test chat window messages (Prompt 9) are not counted. Counts reset per calendar month in Asia/Dhaka (`shop_message_usage`, period `YYYY-MM`).

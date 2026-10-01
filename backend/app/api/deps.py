@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.redis import get_redis
+from app.core.roles import MODERATOR, OWNER
 from app.core.security import decode_access_token
 from app.models import User
 
@@ -50,6 +51,11 @@ def require_roles(*roles: str):
         return user
 
     return checker
+
+
+# Reusable role dependencies for all later modules (see the access matrix in docs/CONVENTIONS.md).
+require_owner = require_roles(OWNER)
+require_shop_user = require_roles(OWNER, MODERATOR)  # never the platform admin
 
 
 def get_current_shop_id(user: User = Depends(get_current_user)) -> int:

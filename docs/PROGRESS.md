@@ -30,3 +30,12 @@
 **New env vars:** none. New dependency: `tzdata` (Asia/Dhaka on Windows).
 **Upgrade steps:** `pip install -r requirements.txt`, `alembic upgrade head`, `python -m app.cli seed`.
 **Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
+
+## Prompt 4 — Staff accounts (Moderator role) & role-based access
+**Built:** owner can add and list Moderator accounts; role constants and reusable `require_owner` / `require_shop_user` dependencies; access matrix documented in `docs/CONVENTIONS.md`; plan-change endpoint now uses `require_owner`. Frontend: owner-only **Staff** page, role-aware dashboard nav, and a `RoleGuard`/`OwnerOnly` component that shows "Not allowed" on direct URL access (applied to Staff and My plan).
+
+**Tables:** none (uses `users` with role `moderator`; no migration).
+**Endpoints:** `GET /api/v1/shop/staff`, `POST /api/v1/shop/staff` (both owner only).
+**Pages:** `/dashboard/staff`; `/dashboard/plan` is now owner-only in the UI.
+**New env vars:** none.
+**Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
