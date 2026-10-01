@@ -50,3 +50,13 @@
 **Seed:** `database/seed/demo_products.json`, loaded by `python -m app.cli seed` (idempotent by product name per shop).
 **Upgrade steps:** `pip install -r requirements.txt`, `alembic upgrade head`, `python -m app.cli seed`.
 **Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
+
+## Prompt 6 — Product import from CSV/Excel
+**Built:** owner-only bulk import of products from `.csv`/`.xlsx` (pandas + openpyxl) with a per-row failure report (row number, name, reasons), a downloadable template, and a sample file with valid and invalid rows. Rows reuse the Prompt 5 validation (`ProductImportRow` extends `ProductIn`) and `ProductService.create` (so the product-change hook fires). Frontend: "Import from CSV/Excel" panel on the Products page (file picker, template download, upload progress, result summary and failed-rows table) that refreshes the list.
+
+**Tables:** none (no migration).
+**Endpoints (owner only):** `POST /api/v1/products/import` (multipart `file`), `GET /api/v1/products/import/template`.
+**Pages:** import panel on `/dashboard/products`.
+**New env vars (backend):** `MAX_IMPORT_MB` (2), `MAX_IMPORT_ROWS` (1000).
+**Sample file:** `database/seed/sample_products_import.csv` (11 rows: 4 import, 7 fail at rows 4, 5, 6, 7, 8, 9, 12).
+**Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.

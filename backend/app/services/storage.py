@@ -48,10 +48,19 @@ class StorageService:
         path.write_bytes(data)
         return key
 
+    @staticmethod
+    def is_external(key: str) -> bool:
+        """Imported products may point at photos hosted elsewhere (full http(s) URLs)."""
+        return key.startswith(("http://", "https://"))
+
     def delete(self, key: str) -> None:
+        if self.is_external(key):
+            return  # not our file
         path = (self.root / key).resolve()
         if self.root in path.parents:  # never touch anything outside the media folder
             path.unlink(missing_ok=True)
 
     def url(self, key: str) -> str:
+        if self.is_external(key):
+            return key
         return f"{self.public_base}/media/{key}"

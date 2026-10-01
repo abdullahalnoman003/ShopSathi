@@ -51,8 +51,9 @@ class ProductService(ShopScopedRepository[Product]):
         )
         return list(items), total
 
-    def create(self, **fields: Any) -> Product:
-        product = self.add(Product(photos=[], **fields))
+    def create(self, photos: list[str] | None = None, **fields: Any) -> Product:
+        """Create a product (also used by the CSV/Excel import; `photos` are storage keys or external URLs)."""
+        product = self.add(Product(photos=photos or [], **fields))
         self.db.commit()
         product_hooks.product_changed(self.shop_id, product.id)
         return product

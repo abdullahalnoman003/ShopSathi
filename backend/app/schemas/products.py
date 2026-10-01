@@ -4,6 +4,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
 MAX_OPTIONS = 20
+MAX_PHOTOS = 5
 
 
 def _clean_options(values: list[str], label: str) -> list[str]:
@@ -55,6 +56,37 @@ class ProductIn(BaseModel):
     @classmethod
     def _colours(cls, v: list[str]) -> list[str]:
         return _clean_options(v, "colour")
+
+
+class ProductImportRow(ProductIn):
+    """One row of a CSV/Excel import: the same rules as a manual product, plus external photo URLs."""
+
+    photos: list[str] = Field(default_factory=list)
+
+    @field_validator("photos")
+    @classmethod
+    def _photos(cls, v: list[str]) -> list[str]:
+        if len(v) > MAX_PHOTOS:
+            raise ValueError(f"more than {MAX_PHOTOS} photos")
+        for url in v:
+            if not url.startswith(("http://", "https://")) or " " in url:
+                raise ValueError(f"photo is not a valid http(s) URL: {url[:60]}")
+            if len(url) > 300:
+                raise ValueError("photo URL is longer than 300 characters")
+        return v
+
+
+class ImportFailure(BaseModel):
+    row: int  # row number as shown in Excel/CSV (the header is row 1)
+    name: str
+    reasons: list[str]
+
+
+class ImportResult(BaseModel):
+    rows_read: int
+    imported: int
+    failed: int
+    failures: list[ImportFailure]
 
 
 class ProductOut(BaseModel):

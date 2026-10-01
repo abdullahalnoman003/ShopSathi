@@ -49,6 +49,13 @@ Roles live in `app/core/roles.py` (`OWNER`, `MODERATOR`, `PLATFORM_ADMIN`). Reus
 - Photos: at most 5 per product. The database keeps **storage keys** (`shops/<shop_id>/products/<uuid>.<ext>`); the API returns full URLs built from `BACKEND_PUBLIC_URL` + `/media/<key>`. `StorageService` (`app/services/storage.py`) stores files under `MEDIA_ROOT` (git-ignored), detects JPEG/PNG/WebP from the file bytes, and enforces `MAX_UPLOAD_MB`. Uploads are all-or-nothing. Deleting a product or photo deletes the files.
 - **Embedding hook (Prompt 8):** `product_hooks.product_changed(shop_id, product_id)` and `product_hooks.product_deleted(shop_id, product_id)` in `app/services/products.py` are called after every create/update/photo change and after delete. They are no-ops now.
 
+## Product import (CSV / Excel)
+- `POST /api/v1/products/import` (owner only) reads `.csv` (UTF-8) or `.xlsx` with pandas/openpyxl. Columns: `name`, `description`, `price`, `sizes`, `colours`, `stock`, `photos`; only `name` and `price` are required, extra columns are ignored. Sizes/colours split on `|` or `,`; photos (http(s) URLs, max 5) split on `|`. `GET /api/v1/products/import/template` returns a template CSV.
+- Row validation is the manual-product validation (`ProductImportRow` extends `ProductIn`); rows are created through `ProductService.create`, so the change hook fires for each. Do not add a second validation path.
+- Row numbers in failure reports are spreadsheet row numbers (the header is row 1). Fully blank rows are ignored. Failed rows are skipped; the rest are saved (each row is its own transaction).
+- Imported `photos` are stored as the given external URLs; `StorageService.url()` returns them unchanged and `delete()` never touches them. Uploaded photos still use storage keys.
+- Limits: `MAX_IMPORT_MB` (default 2) and `MAX_IMPORT_ROWS` (default 1000); larger files get 413.
+
 ## Plans & message limits
 - Plans (`free` / `basic` / `pro`) live in the `plans` table, seeded from `database/seed/plans.json` by `python -m app.cli seed`. **Prices and limits are placeholders (team to decide).** Every shop has a `plan_id`. Payments are simulated only (`simulated_payments`, no gateway, no card/bKash/Nagad data); paid plans need `simulated_payment_confirmed: true`.
 - **Counting rule:** one count = one AI reply sent to a customer on Messenger. Test chat window messages (Prompt 9) are not counted. Counts reset per calendar month in Asia/Dhaka (`shop_message_usage`, period `YYYY-MM`).

@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     media_root: str = "media"
     max_upload_mb: int = 5
 
+    # CSV/Excel product import limits
+    max_import_mb: int = 2
+    max_import_rows: int = 1000
+
     # Auth (no default for the secret: it must come from the environment)
     jwt_secret: str
     access_token_expire_minutes: int = 720

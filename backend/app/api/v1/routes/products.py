@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Response, Depends, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_shop_id, require_owner
 from app.core.database import get_db
 from app.models import Product
-from app.schemas.products import ProductIn, ProductOut, ProductPage
+from app.core.config import get_settings
+from app.schemas.products import ImportResult, ProductIn, ProductOut, ProductPage
+from app.services.product_import import TEMPLATE_CSV, ImportFileError, import_rows, parse_file
 from app.services.products import PhotoLimitError, ProductService
 from app.services.storage import InvalidImage, StorageService
 
@@ -52,6 +54,28 @@ def list_products(
 @router.post("", response_model=ProductOut, status_code=status.HTTP_201_CREATED)
 def create_product(body: ProductIn, svc: ProductService = Depends(get_service)):
     return to_out(svc.create(**body.model_dump()), svc.storage)
+
+
+# Import routes come before /{product_id} so "import" is never read as an id.
+@router.get("/import/template")
+def import_template():
+    return Response(
+        TEMPLATE_CSV,
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="products_template.csv"'},
+    )
+
+
+@router.post("/import", response_model=ImportResult)
+async def import_products(file: UploadFile, svc: ProductService = Depends(get_service)):
+    """Bulk-create products from a .csv or .xlsx file; invalid rows are skipped and reported."""
+    limit = get_settings().max_import_mb * 1024 * 1024
+    data = await file.read(limit + 1)
+    try:
+        rows = parse_file(file.filename or "", data)
+    except ImportFileError as e:
+        raise HTTPException(e.status_code, e.message)
+    return import_rows(svc, rows)
 
 
 @router.get("/{product_id}", response_model=ProductOut)
