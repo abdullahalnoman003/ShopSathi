@@ -59,5 +59,118 @@
     "english": "Happy to help! What are you looking for? Tell me the type of product, and your budget, size or colour if you have one.",
     "banglish": "Obossoi! Apni ki khujchen? Product-er type bolun, ar budget, size ba colour thakle seta o bolun.",
     "bangla": "অবশ্যই! আপনি কী খুঁজছেন? পণ্যের ধরন বলুন, আর বাজেট, সাইজ বা রঙ থাকলে সেটাও বলুন।"
+  },
+  "order_field_prompts": {
+    "english": {
+      "product": "which product you want",
+      "size": "the size",
+      "colour": "the colour",
+      "quantity": "how many you want",
+      "name": "your name",
+      "phone": "your 11-digit mobile number",
+      "address": "your full delivery address"
+    },
+    "banglish": {
+      "product": "kon product nibena",
+      "size": "size",
+      "colour": "colour",
+      "quantity": "koyta nibena",
+      "name": "apnar naam",
+      "phone": "apnar 11 digit-er mobile number",
+      "address": "apnar puro delivery address"
+    },
+    "bangla": {
+      "product": "কোন পণ্যটি নেবেন",
+      "size": "সাইজ",
+      "colour": "রঙ",
+      "quantity": "কয়টি নেবেন",
+      "name": "আপনার নাম",
+      "phone": "আপনার ১১ ডিজিটের মোবাইল নম্বর",
+      "address": "আপনার পুরো ডেলিভারি ঠিকানা"
+    }
+  },
+  "order_option_names": {
+    "english": {
+      "size": "Size",
+      "colour": "Colour"
+    },
+    "banglish": {
+      "size": "Size",
+      "colour": "Colour"
+    },
+    "bangla": {
+      "size": "সাইজ",
+      "colour": "রঙ"
+    }
+  },
+  "order_ask": {
+    "english": "Thanks! To prepare your order I still need: {{items}}.",
+    "banglish": "Dhonnobad! Order ta ready korte aro lagbe: {{items}}.",
+    "bangla": "ধন্যবাদ! অর্ডারটি তৈরি করতে আরও লাগবে: {{items}}।"
+  },
+  "order_phone_invalid": {
+    "english": "That phone number does not look right. Please send a valid 11-digit Bangladeshi mobile number (like 01XXXXXXXXX).",
+    "banglish": "Ei phone number ta thik mone hocche na. Please ekta valid 11 digit-er Bangladeshi mobile number den (jemon 01XXXXXXXXX).",
+    "bangla": "এই ফোন নম্বরটি সঠিক মনে হচ্ছে না। অনুগ্রহ করে ১১ ডিজিটের একটি সঠিক বাংলাদেশি মোবাইল নম্বর দিন (যেমন 01XXXXXXXXX)।"
+  },
+  "order_option_invalid": {
+    "english": "{{what}} {{value}} is not available for {{product}}. Available: {{options}}.",
+    "banglish": "{{product}}-er jonno {{what}} {{value}} nei. Ache: {{options}}.",
+    "bangla": "{{product}}-এর জন্য {{what}} {{value}} নেই। আছে: {{options}}।"
+  },
+  "order_qty_too_many": {
+    "english": "We have only {{stock}} of {{product}} in stock. Please tell me a smaller quantity.",
+    "banglish": "{{product}} stock-e matro {{stock}} ta ache. Kom quantity bolun, please.",
+    "bangla": "{{product}} স্টকে মাত্র {{stock}}টি আছে। অনুগ্রহ করে কম সংখ্যা বলুন।"
+  },
+  "order_choose_product": {
+    "english": "Which one would you like: {{names}}?",
+    "banglish": "Kon ta nibena: {{names}}?",
+    "bangla": "কোনটি নেবেন: {{names}}?"
+  },
+  "order_out_of_stock": {
+    "english": "Sorry, {{product}} is out of stock right now, so I cannot take an order for it. Would you like to see something else?",
+    "banglish": "Sorry, {{product}} ekhon stock-e nei, tai eta-r order nite parchi na. Onno kichu dekhben?",
+    "bangla": "দুঃখিত, {{product}} এখন স্টকে নেই, তাই এর অর্ডার নিতে পারছি না। অন্য কিছু দেখবেন?"
+  },
+  "order_ready": {
+    "english": "Thank you! I have sent your order details to the shop for confirmation:\n{{summary}}\nThe shop will review it and contact you.",
+    "banglish": "Dhonnobad! Apnar order-er details confirmation-er jonno shop-er kache pathiye diyechi:\n{{summary}}\nShop dekhe apnar sathe jogajog korbe.",
+    "bangla": "ধন্যবাদ! আপনার অর্ডারের তথ্য নিশ্চিতকরণের জন্য দোকানে পাঠিয়ে দিয়েছি:\n{{summary}}\nদোকান দেখে আপনার সাথে যোগাযোগ করবে।"
+  },
+  "order_summary_labels": {
+    "english": {
+      "product": "Product",
+      "size": "Size",
+      "colour": "Colour",
+      "quantity": "Quantity",
+      "price": "Price",
+      "name": "Name",
+      "phone": "Phone",
+      "address": "Address",
+      "price_value": "{{price}} BDT each"
+    },
+    "banglish": {
+      "product": "Product",
+      "size": "Size",
+      "colour": "Colour",
+      "quantity": "Quantity",
+      "price": "Dam",
+      "name": "Naam",
+      "phone": "Phone",
+      "address": "Address",
+      "price_value": "{{price}} taka (prottek ta)"
+    },
+    "bangla": {
+      "product": "পণ্য",
+      "size": "সাইজ",
+      "colour": "রঙ",
+      "quantity": "পরিমাণ",
+      "price": "দাম",
+      "name": "নাম",
+      "phone": "ফোন",
+      "address": "ঠিকানা",
+      "price_value": "প্রতিটি {{price}} টাকা"
+    }
   }
 }

@@ -247,12 +247,11 @@ def test_greeting_needs_no_handover():
     assert res.reply_text == phrase("greeting", "english") and not res.handover.needed
 
 
-def test_order_and_complaint_get_the_safe_reply_only():
-    for intent, reason in (("order", "order_request"), ("complaint", "complaint")):
-        llm = ScriptedLLM(understand=[und(intent, product="saree")])
-        res = make_engine(llm)[0].process_customer_message(1, ctx(), "ami nibo")
-        assert res.reply_text == CHECK["banglish"] and (res.handover.needed, res.handover.reason) == (True, reason)
-        assert llm.payloads("reply") == []
+def test_complaint_gets_the_safe_reply_only():
+    llm = ScriptedLLM(understand=[und("complaint", product="saree")])
+    res = make_engine(llm)[0].process_customer_message(1, ctx(), "product ta kharap chilo")
+    assert res.reply_text == CHECK["banglish"] and (res.handover.needed, res.handover.reason) == (True, "complaint")
+    assert llm.payloads("reply") == []
 
 
 def test_unusable_understanding_hands_over():

@@ -42,7 +42,11 @@ def main() -> int:
             if "suggested_products" in r.extras:
                 print("  needs:", r.extras.get("needs"))
                 print("  cards:", [(c["name"], c["price"], bool(c["photo"])) for c in r.extras["suggested_products"]])
-            print(f"  reply: {r.reply_text.split(chr(10))[-1]!r}\n")
+            if "order_missing" in r.extras:
+                print("  order_missing:", r.extras["order_missing"], "| pending:", {k: v for k, v in (r.pending_order or {}).items() if v is not None})
+            if "order_ready" in r.extras:
+                print("  ORDER READY:", r.extras["order_ready"])
+            print(f"  reply: {r.reply_text!r}\n")
         db.execute(delete(Chat).where(Chat.id == chat.id))
         db.commit()
     return 0

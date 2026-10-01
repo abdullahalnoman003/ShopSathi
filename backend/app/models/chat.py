@@ -29,6 +29,8 @@ class Chat(Base):
     is_flagged: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     flag_reason: Mapped[str | None] = mapped_column(String(200), nullable=True)
     flagged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    #: validated order fields collected so far in this chat (cleared when the draft is created)
+    pending_order: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     ai_disclosure_sent: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     last_customer_message_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

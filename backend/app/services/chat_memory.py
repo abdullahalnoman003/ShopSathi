@@ -7,7 +7,7 @@ turns are rebuilt from the database so a returning customer keeps context.
 import json
 
 from shopsathi_ai.understanding import Turn
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -59,12 +59,17 @@ class ChatMemoryService:
         self.redis.delete(_key(chat.shop_id, chat.id))
 
     def _rebuild(self, chat: Chat) -> list[Turn]:
-        rows = self.db.scalars(
-            scoped_select(Message, chat.shop_id)
-            .where(Message.chat_id == chat.id)
-            .order_by(Message.id.desc())
-            .limit(self.limit)
-        ).all()
+        # Messages up to the one that created an order draft are not context any more: the details in them
+        # were used. This also stops the AI from re-reading them and drafting the same order twice.
+        boundary = self.db.scalar(
+            select(func.max(Message.id)).where(
+                Message.shop_id == chat.shop_id, Message.chat_id == chat.id, Message.extras.has_key("order_id")
+            )
+        )
+        query = scoped_select(Message, chat.shop_id).where(Message.chat_id == chat.id)
+        if boundary is not None:
+            query = query.where(Message.id > boundary)
+        rows = self.db.scalars(query.order_by(Message.id.desc()).limit(self.limit)).all()
         return [
             Turn(role=m.sender, text=m.text, entities=(m.extras or {}).get("entities") or {})  # type: ignore[arg-type]
             for m in reversed(rows)

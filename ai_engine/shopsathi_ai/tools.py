@@ -17,6 +17,7 @@ TOOL_DESCRIPTIONS = {
     "get_delivery_charge": "Look up the delivery charge for an area in the shop policy.",
     "get_products": "Read the current price, stock and photos of specific products.",
     "browse_products": "List in-stock products, optionally within a budget.",
+    "update_order_draft": "Merge validated order fields into the chat's pending order.",
 }
 
 
@@ -60,3 +61,13 @@ class ShopTools:
             ToolCall("browse_products", {"max_price": None if max_price is None else str(max_price)}, f"{len(found)} product(s)")
         )
         return found
+
+    def update_order_draft(self, pending: dict | None, fields: dict[str, Any]) -> dict[str, Any]:
+        """Merge the validated order fields into the chat's pending order and return the new pending state.
+
+        The engine returns it to the backend, which stores it in ``chats.pending_order``.
+        """
+        merged = {**(pending or {}), **fields}
+        changed = sorted(k for k, v in fields.items() if (pending or {}).get(k) != v)
+        self.calls.append(ToolCall("update_order_draft", {"fields": changed}, f"{len(changed)} field(s) updated"))
+        return merged

@@ -114,3 +114,16 @@
 **Demo data:** `database/seed/demo_products.json` gains "Eid Special Panjabi" (1450, in stock) and "Premium Silk Panjabi" (1390, sold out) so the proposal example "eid er jonno 1500 er moddhe panjabi" has a real answer; `python -m app.cli seed` adds them.
 **Real-model check** (gpt-4o-mini + text-embedding-3-small, demo shop): "eid er jonno 1500 er moddhe panjabi" -> Eid Special Panjabi (1450 BDT) only; never the sold-out Premium Silk Panjabi (1390) nor Cotton Panjabi (1850); "I need a laptop under 5000" and "navy panjabi 1400 er moddhe" -> honest "could not find" with no cards; "kichu suggest korun" -> asks what the customer wants. Test-chat replies took 3-7 s. `backend/scripts/debug_chat.py` prints needs and cards.
 **Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
+
+## Prompt 11 — Automatic order drafting & phone check
+**Built:**
+- AI engine: `validators.normalize_and_validate_bd_phone` (Bangla digits, spaces/dashes, `+88`/`88`, `^01[3-9]\d{8}$`); `extraction.py` (`extract_order`, structured JSON); `ordering.py` (validation against the shop's data, merge into the pending order, fixed-phrase replies); tool `update_order_draft`; order branch in `ConversationEngine` (collects and asks only for what is missing, re-asks invalid phones, returns `extras["order_ready"]`); prompts `order_system.md` / `order_user.md`; `order_*` phrases in 3 styles.
+- Backend: `chats.pending_order`; `orders` table; `ConversationService` persists pending fields, creates one `draft` order per completed collection (never `confirmed`), clears pending state and memory, logs `order_extraction` usage; memory rebuild ignores messages before a draft.
+- Frontend: "Order draft created" card in the Test chat window (product, size, colour, quantity, price, name, phone, address, status "draft — awaiting seller confirmation").
+
+**Tables (migration 0008):** `orders`; new column `chats.pending_order`.
+**Endpoints / pages:** none new (test-chat messages now carry `extras.order_draft`).
+**New env var (backend):** `ORDER_PENDING_TTL_HOURS` (24).
+**Real-model check** (gpt-4o-mini, Banglish, demo shop): "Cotton Panjabi nibo" -> asked size/colour/quantity/name/phone/address; "XL size, Navy colour, duita lagbe" and "amar nam Rahim Uddin" were picked up; "phone 0171234567" was refused and asked again; "sorry, number ta 01712345678" accepted; the address completed a draft (Cotton Panjabi, XL, Navy, 2, 1850 BDT each, status `draft`, `is_test`). 3-5 s per reply. The browser card matched the stored row.
+**Upgrade steps:** `alembic upgrade head`.
+**Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.

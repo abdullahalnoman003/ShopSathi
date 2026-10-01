@@ -15,8 +15,13 @@ class ScriptedLLM(LLMProvider):
     name = "scripted"
     model = "scripted-1"
 
-    def __init__(self, understand=None, reply=None, needs=None):
-        self.queues = {"understand": list(understand or []), "reply": list(reply or []), "needs": list(needs or [])}
+    def __init__(self, understand=None, reply=None, needs=None, order=None):
+        self.queues = {
+            "understand": list(understand or []),
+            "reply": list(reply or []),
+            "needs": list(needs or []),
+            "order": list(order or []),
+        }
         self.calls: list[tuple[str, str, str]] = []  # (task, system, user)
 
     def generate_json_with_usage(self, system_prompt, user_prompt, *, task="generic"):

@@ -40,6 +40,7 @@ _STOP = {
 
 
 _OCCASIONS = {"eid", "puja", "wedding", "biye", "party", "winter", "summer", "birthday", "ঈদ", "বিয়ে", "পূজা"}
+_ORDER_COLOURS = {"red", "blue", "black", "white", "green", "navy", "yellow", "maroon", "cream", "rose", "coral", "silver", "natural", "brown"}
 _COLOURS = {
     "red": "red", "lal": "red", "লাল": "red", "blue": "blue", "nil": "blue", "black": "black", "kalo": "black",
     "white": "white", "shada": "white", "green": "green", "sobuj": "green", "navy": "navy", "yellow": "yellow",
@@ -61,6 +62,8 @@ class MockLLMProvider(LLMProvider):
         payload: dict[str, Any] = json.loads(match.group(1)) if match else {}
         if task == "understand":
             data = self._understand(payload)
+        elif task == "order":
+            data = self._order(payload)
         elif task == "needs":
             data = self._needs(payload)
         elif task == "reply":
@@ -113,6 +116,59 @@ class MockLLMProvider(LLMProvider):
             "language_style": detect_style(message),
             "confidence": 0.5,
         }
+
+    # ---- order extraction: regex rules over the customer's messages ----
+
+    def _order(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """A rule-based stand-in for the real model. It understands lines like "Name: Rahim Uddin",
+        "Phone: 01712345678", "Address: House 5, Mirpur 10, Dhaka", "2 ta", "XL", "Navy" and "<product> nibo"."""
+        pending = payload.get("pending") or {}
+        customer = [m["text"] for m in payload.get("conversation", []) if m.get("from") == "customer"]
+        customer.append(str(payload.get("latest_message", "")))
+        text = normalise_digits("\n".join(customer))
+
+        out: dict[str, Any] = {k: None for k in ("product", "product_en", "size", "colour", "quantity", "name", "phone", "address")}
+        for m in re.finditer(r"(?:phone|mobile|number|ফোন|মোবাইল)\s*[:\-]?\s*(\+?[\d][\d\s\-]{8,18}\d)", text, re.IGNORECASE):
+            out["phone"] = m.group(1).strip()
+        if out["phone"] is None:
+            for m in re.finditer(r"(\+?\d[\d\s\-]{8,16}\d)", text):
+                if 10 <= len(re.sub(r"\D", "", m.group(1))) <= 13:
+                    out["phone"] = m.group(1).strip()
+        m = re.findall(r"(?:^|\n|,|\.)\s*(?:name|nam|naam|my name is|amar nam|নাম)\s*[:\-]?\s*([A-Za-z\u0980-\u09FF][A-Za-z\u0980-\u09FF .]{1,40}?)\s*(?=,|\n|$|phone|mobile|address)", text, re.IGNORECASE)
+        if m:
+            out["name"] = m[-1].strip()
+        m = re.findall(r"(?:address|thikana|ঠিকানা)\s*[:\-]?\s*([^\n]{3,200})", text, re.IGNORECASE)
+        if m:
+            out["address"] = m[-1].strip()
+        m = re.findall(r"(\d+)\s*(?:ta|ti|pcs|piece|pieces|টি|টা)\b|(?:quantity|qty)\s*[:\-]?\s*(\d+)", text, re.IGNORECASE)
+        if m:
+            last = m[-1]
+            out["quantity"] = int(last[0] or last[1])
+        else:
+            for word, n in (("ekta", 1), ("duita", 2), ("tinta", 3), ("একটা", 1), ("দুইটা", 2)):
+                if re.search(rf"\b{word}\b", text, re.IGNORECASE):
+                    out["quantity"] = n
+        size_hits = [
+            (m.start(), (m.group(1) or m.group(2)).upper())
+            for m in re.finditer(r"\b(xxxl|xxl|xl|xs)\b|size\s*[:\-]?\s*(\w+)", text, re.IGNORECASE)
+        ] + [(m.start(), m.group(1)) for m in re.finditer(r"\b([SML])\b", text)]
+        if size_hits:
+            out["size"] = max(size_hits)[1]
+        for word in re.findall(r"[A-Za-z\u0980-\u09FF]+", text):
+            if word.lower() in _ORDER_COLOURS:
+                out["colour"] = word.capitalize()
+        # the product: words around "nibo / order / chai" that are not details
+        for line in reversed(customer):
+            if re.search(r"\b(nibo|nebo|order|chai|lagbe|kinbo|buy|want)\b", line, re.IGNORECASE):
+                words = re.findall(r"[A-Za-z]+", normalise_digits(line))
+                skip = _STOP | _OCCASIONS | set(_ORDER_COLOURS) | {"xl", "xxl", "xxxl", "xs", "ta", "ti", "pcs", "ami", "amar", "korbo", "kore", "den", "dite", "pathan", "name", "phone", "address", "size", "colour", "quantity", "qty"}
+                tokens = [w for w in words if w.lower() not in skip and len(w) > 2]
+                if tokens:
+                    out["product"] = " ".join(tokens)
+                    out["product_en"] = out["product"]
+                break
+        out["missing_fields"] = [k for k in ("product", "size", "colour", "quantity", "name", "phone", "address") if not out.get(k) and not pending.get(k if k != "product" else "product_name")]
+        return out
 
     # ---- needs for product suggestions: regex rules ----
 

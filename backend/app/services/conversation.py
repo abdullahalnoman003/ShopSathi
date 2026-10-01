@@ -1,23 +1,31 @@
 """The single entry point for customer messages: ConversationService.handle_customer_message.
 
 The Test chat window uses it now; Prompt 14 (Messenger) MUST reuse it so every channel gets the same
-behaviour: storing messages, short-term memory, the AI engine, the first-reply disclosure and usage logging.
+behaviour: storing messages, short-term memory, the AI engine, the first-reply disclosure, order drafting
+and usage logging.
 """
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from typing import Any
 
 from shopsathi_ai.engine import ChatContext, ConversationEngine, EngineConfig, EngineResult
+from shopsathi_ai.phrases import phrase
 from shopsathi_ai.understanding import Turn
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.ai_adapters.factory import get_embedder, get_llm
 from app.ai_adapters.gateway import BackendShopDataGateway
 from app.core.config import get_settings
 from app.core.redis import get_redis
-from app.models import Chat, Message, Shop
+from app.models import Chat, Message, Order, Product, Shop
 from app.services.ai_usage import log_ai_usage
 from app.services.chat_memory import ChatMemoryService
+from app.services.tenant import scoped_select
+
+DUPLICATE_DRAFT_WINDOW = timedelta(minutes=10)
+ORDER_SENT_PLACEHOLDER = "(the customer's order details were sent to the shop)"
 
 
 @dataclass
@@ -25,6 +33,7 @@ class ConversationResult:
     customer_message: Message
     ai_message: Message
     engine_result: EngineResult
+    order: Order | None = None
 
 
 def build_engine(db: Session) -> ConversationEngine:
@@ -37,6 +46,10 @@ def build_engine(db: Session) -> ConversationEngine:
     )
 
 
+def _strip_stamp(pending: dict | None) -> dict | None:
+    return {k: v for k, v in pending.items() if k != "updated_at"} if pending else None
+
+
 class ConversationService:
     def __init__(
         self, db: Session, engine: ConversationEngine | None = None, memory: ChatMemoryService | None = None
@@ -44,6 +57,81 @@ class ConversationService:
         self.db = db
         self.engine = engine or build_engine(db)
         self.memory = memory or ChatMemoryService(db)
+
+    # ------------------------------------------------------------------ orders
+
+    def _live_pending(self, chat: Chat, now: datetime) -> dict | None:
+        """The order being collected, unless it was left unfinished for too long."""
+        pending = chat.pending_order
+        if not pending:
+            return None
+        stamp = pending.get("updated_at")
+        if stamp:
+            try:
+                age = now - datetime.fromisoformat(stamp)
+            except ValueError:
+                age = timedelta(0)
+            if age > timedelta(hours=get_settings().order_pending_ttl_hours):
+                return None
+        return _strip_stamp(pending)
+
+    def _create_draft(self, chat: Chat, ready: dict[str, Any], now: datetime) -> Order | None:
+        """Create ONE order with status 'draft'. The AI never confirms: that is the seller's decision."""
+        product = self.db.scalars(
+            scoped_select(Product, chat.shop_id).where(Product.id == ready["product_id"])
+        ).first()
+        if product is None or product.stock_count <= 0:
+            return None  # sold out or removed while the customer was typing
+        same = self.db.scalars(
+            scoped_select(Order, chat.shop_id).where(
+                Order.chat_id == chat.id,
+                Order.status == "draft",
+                Order.product_id == product.id,
+                Order.size.is_(ready["size"]) if ready["size"] is None else Order.size == ready["size"],
+                Order.colour.is_(ready["colour"]) if ready["colour"] is None else Order.colour == ready["colour"],
+                Order.quantity == ready["quantity"],
+                Order.customer_phone == ready["customer_phone"],
+                Order.customer_address == ready["customer_address"],
+                Order.created_at > now - DUPLICATE_DRAFT_WINDOW,
+            )
+        ).first()
+        if same is not None:  # the same completed collection: do not create a second draft
+            return same
+        order = Order(
+            shop_id=chat.shop_id,
+            chat_id=chat.id,
+            product_id=product.id,
+            product_name=product.name,
+            size=ready["size"],
+            colour=ready["colour"],
+            quantity=ready["quantity"],
+            unit_price=product.price,  # catalogue price now, not what the model or the customer said
+            customer_name=ready["customer_name"],
+            customer_phone=ready["customer_phone"],
+            customer_address=ready["customer_address"],
+            status="draft",
+            is_test=chat.channel == "test",
+        )
+        self.db.add(order)
+        self.db.flush()
+        return order
+
+    @staticmethod
+    def _draft_card(order: Order) -> dict[str, Any]:
+        return {
+            "id": order.id,
+            "product_name": order.product_name,
+            "size": order.size,
+            "colour": order.colour,
+            "quantity": order.quantity,
+            "unit_price": float(order.unit_price),
+            "customer_name": order.customer_name,
+            "customer_phone": order.customer_phone,
+            "customer_address": order.customer_address,
+            "status": order.status,
+        }
+
+    # ------------------------------------------------------------------ entry point
 
     def handle_customer_message(self, chat: Chat, text: str) -> ConversationResult:
         """Store the customer's message, produce the AI reply, store it, and log the AI usage."""
@@ -56,7 +144,8 @@ class ConversationService:
         chat.last_customer_message_at = now
         db.commit()  # the customer's message is kept even if something fails below
 
-        # One message at a time per chat, so only one reply can be "the first" (disclosure).
+        # One message at a time per chat, so only one reply can be "the first" (disclosure) and an order
+        # collection cannot be updated by two messages at once.
         with get_redis().lock(f"chatlock:{shop_id}:{chat.id}", timeout=90, blocking_timeout=60):
             db.refresh(chat)
             shop = db.get(Shop, shop_id)
@@ -64,6 +153,7 @@ class ConversationService:
                 shop_name=shop.name if shop else "",
                 is_first_ai_reply=not chat.ai_disclosure_sent,
                 recent_turns=recent,
+                pending_order=self._live_pending(chat, now),
             )
             result = self.engine.process_customer_message(shop_id, ctx, text)
 
@@ -72,31 +162,55 @@ class ConversationService:
             customer.confidence = result.confidence
             customer.language_style = result.language_style
             customer.extras = {"entities": entities}
+
+            reply_text = result.reply_text
+            extras: dict[str, Any] = {
+                **result.extras,
+                "entities": entities,
+                "handover": {"needed": result.handover.needed, "reason": result.handover.reason},
+                "disclosure": result.disclosure_included,
+            }
+            order: Order | None = None
+            ready = extras.pop("order_ready", None)  # the stored order replaces it
+            if ready is not None:
+                order = self._create_draft(chat, ready, now)
+                if order is not None:
+                    extras["order_id"] = order.id
+                    extras["order_draft"] = self._draft_card(order)
+                else:  # never tell the customer it was sent when nothing was created
+                    reply_text = phrase("check_with_shop", result.language_style)
+                    extras["handover"] = {"needed": True, "reason": "order_product_unavailable"}
+
+            # keep the collected fields for the next turn (or clear them once the draft exists)
+            if ready is not None:
+                chat.pending_order = None
+            elif result.pending_order is None:
+                chat.pending_order = None
+            elif _strip_stamp(result.pending_order) != _strip_stamp(chat.pending_order):
+                chat.pending_order = {**_strip_stamp(result.pending_order), "updated_at": now.isoformat()}
+
             ai = Message(
                 shop_id=shop_id,
                 chat_id=chat.id,
                 sender="ai",
-                text=result.reply_text,
+                text=reply_text,
                 intent=result.intent,
                 confidence=result.confidence,
                 language_style=result.language_style,
-                extras={
-                    **result.extras,
-                    "entities": entities,
-                    "handover": {"needed": result.handover.needed, "reason": result.handover.reason},
-                    "disclosure": result.disclosure_included,
-                },
+                extras=extras,
                 sent_at=datetime.now(timezone.utc),
             )
             db.add(ai)
             if result.disclosure_included:
                 chat.ai_disclosure_sent = True
-            for u in result.usage:  # LLM calls: operation "intent" and "chat_reply"
+            for u in result.usage:  # LLM calls: intent, order_extraction, suggestion_needs, chat_reply
                 log_ai_usage(db, shop_id, u.operation, u.provider, u.model, u.input_tokens, u.output_tokens, commit=False)
             db.commit()
 
-            self.memory.append(
-                chat,
-                [Turn("customer", text, entities), Turn("ai", result.reply_text, entities)],
-            )
-        return ConversationResult(customer, ai, result)
+            if ready is not None:
+                # The details were used: forget them, so they cannot be read again and drafted twice.
+                self.memory.clear(chat)
+                self.memory.append(chat, [Turn("ai", ORDER_SENT_PLACEHOLDER, {})])
+            else:
+                self.memory.append(chat, [Turn("customer", text, entities), Turn("ai", reply_text, entities)])
+        return ConversationResult(customer, ai, result, order)

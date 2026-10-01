@@ -40,7 +40,8 @@ class Settings(BaseSettings):
     chat_memory_turns: int = 8  # last N turns of a chat kept in Redis as short-term memory
     chat_memory_ttl_seconds: int = 21600  # memory expires 6 hours after the last message
     rag_min_score: float = 0.2  # retrieved chunks below this similarity are ignored
-    rag_min_product_score: float = 0.3  # semantic product matches below this similarity are ignored
+    rag_min_product_score: float = 0.3
+    order_pending_ttl_hours: int = 24  # an unfinished order collection is forgotten after this long  # semantic product matches below this similarity are ignored
 
     # Background jobs: run Celery tasks inline (used by automated tests only)
     celery_task_always_eager: bool = False

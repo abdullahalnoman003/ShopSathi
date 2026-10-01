@@ -9,8 +9,10 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from shopsathi_ai.chunking import format_money
+from shopsathi_ai.extraction import extract_order
 from shopsathi_ai.interfaces import ProductInfo, RetrievedChunk, ShopDataGateway, StockInfo
 from shopsathi_ai.language import LanguageStyle, detect_style, normalise_digits
+from shopsathi_ai.ordering import compose_order_reply, core, order_ready_fields, process_order
 from shopsathi_ai.phrases import is_greeting, phrase
 from shopsathi_ai.providers.base import EmbeddingProvider, EmbeddingProviderError, LLMProvider, LLMProviderError, LLMResult
 from shopsathi_ai.reply import ReplyRequest, write_reply
@@ -45,6 +47,8 @@ class ChatContext:
     shop_name: str
     is_first_ai_reply: bool = False
     recent_turns: list[Turn] = field(default_factory=list)
+    #: the order being collected in this chat (validated fields so far), or None
+    pending_order: dict | None = None
 
 
 @dataclass
@@ -77,6 +81,9 @@ class EngineResult:
     usage: list[UsageRecord] = field(default_factory=list)
     #: True when the automatic-assistant disclosure is part of reply_text
     disclosure_included: bool = False
+    #: the chat's pending order after this turn (store it; None clears it). Complete orders are in
+    #: extras["order_ready"]; the AI only ever produces drafts for the seller to confirm.
+    pending_order: dict | None = None
 
 
 class _Run:
@@ -85,6 +92,7 @@ class _Run:
     def __init__(self, shop_id: int, ctx: ChatContext, message: str, style: LanguageStyle, tools: ShopTools):
         self.shop_id, self.ctx, self.message, self.style, self.tools = shop_id, ctx, message, style, tools
         self.usage: list[UsageRecord] = []
+        self.pending_out: dict | None = ctx.pending_order
         self.intent = "other"
         self.entities: dict[str, str | None] = {
             "product_name": None, "product_name_en": None, "size": None, "colour": None, "area": None,
@@ -114,6 +122,14 @@ class ConversationEngine:
     def process_customer_message(self, shop_id: int, chat_context: ChatContext, message: str) -> EngineResult:
         text = normalise_digits(message).strip()
         style = detect_style(text)
+        if style == "english" and chat_context.pending_order:
+            # A name, phone number or address has no language signal: while an order is being collected,
+            # keep the style the customer has been writing in.
+            for turn in reversed(chat_context.recent_turns):
+                earlier = detect_style(normalise_digits(turn.text)) if turn.role == "customer" else "english"
+                if earlier != "english":
+                    style = earlier
+                    break
         run = _Run(shop_id, chat_context, text, style, ShopTools(self.gateway, shop_id))
         try:
             return self._process(run)
@@ -143,8 +159,11 @@ class ConversationEngine:
         # Intents that later prompts will handle for real: a safe reply plus a handover signal.
         if und.intent == "complaint":
             return self._check_with_shop(run, "complaint")
-        if und.intent == "order":
-            return self._check_with_shop(run, "order_request")
+        # Order drafting (AI-4): on an order request, and on follow-up turns while an order is being collected
+        if und.intent == "order" or run.ctx.pending_order:
+            ordered = self._order(run, und)
+            if ordered is not None:
+                return ordered
 
         if und.intent == "other" and is_greeting(run.message):
             return self._finish(run, phrase("greeting", run.style), Handover())
@@ -197,6 +216,43 @@ class ConversationEngine:
             "sources": [{"type": c.source_type, "id": c.source_id} for c in chunks],
         }
         return self._finish(run, reply.text, Handover(), extras=extras)
+
+    # --------------------------------------------------------------- orders
+
+    def _order(self, run: _Run, und: Understanding) -> EngineResult | None:
+        """Collect, validate and draft an order. Returns None when the message is not about the order (a question
+        asked in the middle of collecting one), so it is answered normally and the pending order is kept."""
+        cfg = self.config
+        pending = core(run.ctx.pending_order)
+        out = extract_order(
+            self.llm, run.ctx.recent_turns, pending, run.message, max_turns=cfg.max_recent_turns + 2, max_turn_chars=cfg.max_turn_chars + 100
+        )
+        run.add_llm("order_extraction", out.usage)
+        if out.extraction is None:
+            return None if und.intent != "order" else self._check_with_shop(run, "order_extraction_failed")
+
+        customer_text = " ".join([t.text for t in run.ctx.recent_turns if t.role == "customer"] + [run.message])
+        hint = (
+            run.entities.get("product_name_en") or run.entities.get("product_name") or self._product_from_history(run.ctx.recent_turns)
+        )
+        check = process_order(run.tools, out.extraction, pending, customer_text, hint, cfg.min_name_match)
+        if not check.progressed and und.intent != "order":
+            return None
+
+        run.intent = "order"
+        state = run.tools.update_order_draft(run.ctx.pending_order, check.state)
+        run.entities.update(product_name=state.get("product_name"), size=state.get("size"), colour=state.get("colour"))
+        run.pending_out = state if any(v is not None for v in check.state.values()) else None
+
+        if "unknown_product" in check.issues:  # AI-R04: not in the shop's data, so do not guess
+            return self._check_with_shop(run, "not_in_shop_data")
+
+        extras: dict[str, Any] = {"order_missing": check.ask}
+        if check.ready:
+            extras["order_ready"] = order_ready_fields(check)
+            extras["product_ids"] = [check.state["product_id"]]
+            run.pending_out = None
+        return self._finish(run, compose_order_reply(check, run.style), Handover(), extras=extras)
 
     # ------------------------------------------------------------ suggestions
 
@@ -347,6 +403,7 @@ class ConversationEngine:
             extras=out_extras,
             usage=run.usage,
             disclosure_included=disclosure,
+            pending_order=run.pending_out,
         )
 
 
