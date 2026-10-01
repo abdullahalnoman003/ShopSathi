@@ -1,0 +1,26 @@
+{
+  "_note": "Fictional demo shop policies, keyed by demo shop owner email. Delivery charges in BDT.",
+  "rina.demo@example.com": {
+    "delivery_time": "Inside Dhaka: 1-2 working days. Outside Dhaka: 3-5 working days by courier.",
+    "return_rules": "Unused items in original packaging can be returned within 3 days of delivery. Customised items and opened cosmetics or food cannot be returned. Delivery charge is not refunded.",
+    "payment_options": "Cash on delivery inside Dhaka. bKash or Nagad advance payment for outside Dhaka orders.",
+    "delivery_areas": [
+      {"area_name": "Inside Dhaka", "charge": 60},
+      {"area_name": "Outside Dhaka", "charge": 120},
+      {"area_name": "Khagan", "charge": 100},
+      {"area_name": "Savar", "charge": 100},
+      {"area_name": "Mirpur", "charge": 60}
+    ]
+  },
+  "karim.demo@example.com": {
+    "delivery_time": "Dhaka city: same day if ordered before 2 PM, otherwise next day. Other districts: 2-4 working days.",
+    "return_rules": "7-day replacement warranty for manufacturing defects with the original box and invoice. No refund for physical damage or water damage.",
+    "payment_options": "Cash on delivery in Dhaka city. bKash, Nagad or bank transfer in advance for other districts.",
+    "delivery_areas": [
+      {"area_name": "Dhaka City", "charge": 70},
+      {"area_name": "Gazipur", "charge": 100},
+      {"area_name": "Narayanganj", "charge": 100},
+      {"area_name": "Other Districts", "charge": 130}
+    ]
+  }
+}

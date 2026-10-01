@@ -13,8 +13,10 @@ from sqlalchemy import select
 from app.core.config import get_settings
 from app.core.database import SessionLocal
 from app.core.security import hash_password
-from app.models import Product, Shop, User
+from app.models import Product, Shop, ShopPolicy, User
+from app.schemas.policy import PolicyIn
 from app.services.plans import get_plan_by_code, seed_plans
+from app.services.policy import PolicyService
 
 SEED_DIR = Path(__file__).resolve().parents[2] / "database" / "seed"
 
@@ -64,8 +66,24 @@ def seed_demo_products(db) -> None:
         print(f"products: {created} created for {owner_email}")
 
 
+def seed_demo_policies(db) -> None:
+    """Create demo shop policies (skips shops that already have one)."""
+    data = json.loads((SEED_DIR / "demo_policies.json").read_text(encoding="utf-8"))
+    for owner_email, policy in data.items():
+        if owner_email.startswith("_"):
+            continue
+        owner = db.scalar(select(User).where(User.email == owner_email.lower()))
+        if owner is None or owner.shop_id is None:
+            continue
+        if db.scalar(select(ShopPolicy.id).where(ShopPolicy.shop_id == owner.shop_id)) is not None:
+            print(f"policy: skip {owner_email} (already set)")
+            continue
+        PolicyService(db, owner.shop_id).save(PolicyIn(**policy))
+        print(f"policy: created for {owner_email}")
+
+
 def seed() -> int:
-    """Upsert the plans, create the fictional demo shops and their demo products from database/seed/demo_shops.json (idempotent)."""
+    """Upsert the plans, create the fictional demo shops with their demo products and policies from database/seed/demo_shops.json (idempotent)."""
     demos = json.loads((SEED_DIR / "demo_shops.json").read_text(encoding="utf-8"))
     env_password = os.environ.get("DEMO_PASSWORD")
     with SessionLocal() as db:
@@ -96,6 +114,7 @@ def seed() -> int:
             else:
                 print(f"create {email}  password: {password}   (shown once)")
         seed_demo_products(db)
+        seed_demo_policies(db)
     return 0
 
 

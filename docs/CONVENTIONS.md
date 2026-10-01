@@ -56,6 +56,11 @@ Roles live in `app/core/roles.py` (`OWNER`, `MODERATOR`, `PLATFORM_ADMIN`). Reus
 - Imported `photos` are stored as the given external URLs; `StorageService.url()` returns them unchanged and `delete()` never touches them. Uploaded photos still use storage keys.
 - Limits: `MAX_IMPORT_MB` (default 2) and `MAX_IMPORT_ROWS` (default 1000); larger files get 413.
 
+## Shop policy
+- `shop_policies` (one row per shop, `shop_id` unique) holds delivery time, return rules and payment options; `delivery_areas` (shop-owned, `shop_id` FK cascade + index) holds area name and charge (BDT, >= 0). Area names are unique per shop, ignoring case (DB index on `lower(area_name)`) and also ignoring punctuation/spacing (validated with `normalise_area`). Endpoints `GET`/`PUT /api/v1/shop/policy` are owner-only; `PUT` replaces the whole policy including the areas list.
+- **Delivery charge lookup for the AI (Prompt 9):** `PolicyService.get_delivery_charge(area_text)` returns `DeliveryCharge(found, area_name, charge)`. It matches only an exact area name after normalisation (case, punctuation and extra spaces ignored). No partial or fuzzy matching: the AI tool must extract the area name itself and treat `found=False` as "ask the seller / don't guess".
+- **Embedding hook (Prompt 8):** `policy_hooks.policy_changed(shop_id)` in `app/services/policy.py` is called after every save. It is a no-op now.
+
 ## Plans & message limits
 - Plans (`free` / `basic` / `pro`) live in the `plans` table, seeded from `database/seed/plans.json` by `python -m app.cli seed`. **Prices and limits are placeholders (team to decide).** Every shop has a `plan_id`. Payments are simulated only (`simulated_payments`, no gateway, no card/bKash/Nagad data); paid plans need `simulated_payment_confirmed: true`.
 - **Counting rule:** one count = one AI reply sent to a customer on Messenger. Test chat window messages (Prompt 9) are not counted. Counts reset per calendar month in Asia/Dhaka (`shop_message_usage`, period `YYYY-MM`).

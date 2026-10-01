@@ -60,3 +60,14 @@
 **New env vars (backend):** `MAX_IMPORT_MB` (2), `MAX_IMPORT_ROWS` (1000).
 **Sample file:** `database/seed/sample_products_import.csv` (11 rows: 4 import, 7 fail at rows 4, 5, 6, 7, 8, 9, 12).
 **Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
+
+## Prompt 7 — Shop policy manager
+**Built:** owner-only shop policy (delivery charge by area, delivery time, return rules, payment options) with whole-policy replace on save, a tested `PolicyService.get_delivery_charge` lookup for the AI (exact/normalised match, never guesses), and a `policy_changed` hook point for Prompt 8. Demo policies for the two demo shops. Frontend: "Shop policy" page with add/remove area rows, three text fields and save feedback.
+
+**Tables (migration 0005):** `shop_policies`, `delivery_areas` (unique index on `shop_id, lower(area_name)`).
+**Endpoints (owner only):** `GET /api/v1/shop/policy` (empty defaults if never saved), `PUT /api/v1/shop/policy`.
+**Pages:** `/dashboard/policy`.
+**New env vars:** none.
+**Seed:** `database/seed/demo_policies.json`, loaded by `python -m app.cli seed` (skips shops that already have a policy).
+**Upgrade steps:** `alembic upgrade head`, `python -m app.cli seed`.
+**Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
