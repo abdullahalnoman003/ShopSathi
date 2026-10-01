@@ -139,3 +139,7 @@ See the root `README.md`.
 - `/api/v1/chats...` is owner + moderator, Messenger chats only (`channel='test'` is never listed and gives 404). Listing order: flagged first (oldest flag first), then latest activity.
 - The seller's manual reply (`sender='seller'`) is allowed only while `ai_paused`, always goes through `MessengerSender` (24-hour window) and is never passed to `UsageLimitService`. Pause, resume and resolve-flag are independent actions.
 - Shared message cards live in `frontend/src/components/ChatCards.tsx`.
+
+## Orders dashboard & CSV export (Prompt 16)
+- `/api/v1/orders...` is owner + moderator, `is_test = false` only. Only drafts can be edited, confirmed or cancelled (else 409); only a person confirms. The unit price is never edited: it comes from the catalogue when the product changes.
+- The courier CSV is UTF-8 with BOM, CRLF lines, columns `order_id, confirmed_at, customer_name, customer_phone, customer_address, product_name, size, colour, quantity, unit_price, total_price`; date filters are Asia/Dhaka days, both included. Any future export of customer-written text must neutralise leading `= + - @` the same way (`_safe_cell`).
