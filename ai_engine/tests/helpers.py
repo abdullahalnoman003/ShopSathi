@@ -15,13 +15,13 @@ class ScriptedLLM(LLMProvider):
     name = "scripted"
     model = "scripted-1"
 
-    def __init__(self, understand=None, reply=None):
-        self.queues = {"understand": list(understand or []), "reply": list(reply or [])}
+    def __init__(self, understand=None, reply=None, needs=None):
+        self.queues = {"understand": list(understand or []), "reply": list(reply or []), "needs": list(needs or [])}
         self.calls: list[tuple[str, str, str]] = []  # (task, system, user)
 
     def generate_json_with_usage(self, system_prompt, user_prompt, *, task="generic"):
         self.calls.append((task, system_prompt, user_prompt))
-        queue = self.queues[task]
+        queue = self.queues[task] or [{}]  # nothing scripted: an unusable (empty) answer
         item = queue.pop(0) if len(queue) > 1 else queue[0]
         if isinstance(item, Exception):
             raise item
@@ -86,6 +86,16 @@ class FakeGateway:
             size=size, size_offered=None if size is None else size.lower() in [s.lower() for s in p.sizes],
             colour=colour, colour_offered=None if colour is None else colour.lower() in [c.lower() for c in p.colours],
         )
+
+    def get_products(self, shop_id, product_ids):
+        self.calls.append(("get_products", shop_id, tuple(product_ids)))
+        by_id = {p.id: p for p in self.products}
+        return [by_id[i] for i in product_ids if i in by_id]
+
+    def browse_products(self, shop_id, max_price, limit):
+        self.calls.append(("browse_products", shop_id, max_price))
+        ok = [p for p in self.products if p.stock_count > 0 and (max_price is None or p.price <= max_price)]
+        return ok[:limit]
 
     def get_delivery_charge(self, shop_id, area_text):
         self.calls.append(("get_delivery_charge", shop_id, area_text))

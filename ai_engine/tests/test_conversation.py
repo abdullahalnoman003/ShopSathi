@@ -191,7 +191,7 @@ def test_english_product_form_is_used_to_search_the_catalogue():
     """"লাল শাড়ি" has no word in common with the catalogue; its English form "red saree" does."""
     entities = und("price", product="লাল শাড়ি")
     entities["entities"]["product_name_en"] = "red saree"
-    llm = ScriptedLLM(understand=[entities], reply=[{"reply": "Red Jamdani Saree er dam 4800 taka."}])
+    llm = ScriptedLLM(understand=[entities], reply=[{"reply": "Red Jamdani Saree এর দাম 4800 টাকা।"}])  # a Bangla message gets a Bangla reply
     engine, gw = make_engine(llm)
     res = engine.process_customer_message(1, ctx(), "লাল শাড়ির দাম কত?")
     assert ("search_products", 1, "red saree") in gw.calls and res.extras["product_ids"] == [1]
@@ -253,12 +253,6 @@ def test_order_and_complaint_get_the_safe_reply_only():
         res = make_engine(llm)[0].process_customer_message(1, ctx(), "ami nibo")
         assert res.reply_text == CHECK["banglish"] and (res.handover.needed, res.handover.reason) == (True, reason)
         assert llm.payloads("reply") == []
-
-
-def test_suggestion_lists_catalogue_items_only():
-    llm = ScriptedLLM(understand=[und("suggestion", product="saree")], reply=[{"reply": "Try Red Jamdani Saree, 4800 BDT."}])
-    res = make_engine(llm)[0].process_customer_message(1, ctx(), "kono saree dekhan")
-    assert res.intent == "suggestion" and "4800" in res.reply_text and res.extras["product_ids"] == [1]
 
 
 def test_unusable_understanding_hands_over():
@@ -323,3 +317,19 @@ def test_mock_llm_end_to_end_answers_from_catalogue():
     assert "stock" in out_of_stock.reply_text.lower() and "0" not in out_of_stock.reply_text.replace("650", "")
     unknown = engine.process_customer_message(1, ctx(), "Blender price koto?")
     assert unknown.reply_text == CHECK["banglish"] and unknown.handover.needed
+
+
+def test_banglish_reply_in_bangla_script_is_regenerated_then_rejected():
+    from shopsathi_ai.reply import script_matches_style
+
+    assert script_matches_style("Saree er dam 4800 taka.", "banglish") and script_matches_style("Price 4800", "english")
+    assert not script_matches_style("দাম 4800 টাকা", "banglish") and script_matches_style("দাম 4800 টাকা", "bangla")
+    assert not script_matches_style("Saree er dam 4800 taka.", "bangla")  # a Bangla message needs a Bangla reply
+    assert script_matches_style("Red Jamdani Saree এর দাম 4800 টাকা", "bangla")
+
+    llm = ScriptedLLM(reply=[{"reply": "দাম 4800 টাকা"}, {"reply": "Saree er dam 4800 taka."}])
+    out = write_reply(llm, ReplyRequest("dam koto", "price", "banglish", ["Price: 4800 BDT"]))
+    assert out.text == "Saree er dam 4800 taka." and "writing style" in llm.calls[1][2]
+
+    stubborn = write_reply(ScriptedLLM(reply=[{"reply": "দাম 4800 টাকা"}]), ReplyRequest("dam koto", "price", "banglish", ["Price: 4800 BDT"]))
+    assert stubborn.text is None and stubborn.reason == "reply_wrong_script"

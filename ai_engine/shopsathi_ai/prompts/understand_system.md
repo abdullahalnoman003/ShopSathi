@@ -21,7 +21,9 @@ Intent meanings:
 - "price": asks how much something costs ("price koto?", "dam koto", "দাম কত").
 - "size_stock": asks about a size, colour or whether something is available or in stock ("XL ache?", "stock e ache?").
 - "delivery": asks about delivery charge, delivery time or delivery area ("Khagan e delivery charge koto?").
-- "suggestion": asks what to buy or wants to see options ("eid er jonno panjabi dekhan", "kono bhalo saree ache?").
+- "suggestion": asks what to buy, or looks for a KIND of product (with or without a budget, size, colour or
+  occasion), without naming one exact product: "eid er jonno 1500 er moddhe panjabi", "navy panjabi 1400 er moddhe",
+  "I need a laptop under 5000", "kono bhalo saree ache?", "panjabi dekhan".
 - "order": wants to buy or order ("ami nibo", "order korbo", "confirm").
 - "complaint": a problem with an order, product, delivery or service, or an angry message.
 - "other": anything else (greetings, thanks, return or payment questions, unrelated questions).

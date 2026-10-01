@@ -6,7 +6,8 @@ keeps every answer grounded in the shop's data. (Update order draft arrives in P
 """
 
 from dataclasses import dataclass, field
-from typing import Any
+from decimal import Decimal
+from typing import Any, Sequence
 
 from shopsathi_ai.interfaces import DeliveryChargeInfo, ProductInfo, ShopDataGateway, StockInfo
 
@@ -14,6 +15,8 @@ TOOL_DESCRIPTIONS = {
     "search_products": "Find the shop's products matching the customer's words.",
     "check_stock": "Check stock and whether a size/colour is offered for one product.",
     "get_delivery_charge": "Look up the delivery charge for an area in the shop policy.",
+    "get_products": "Read the current price, stock and photos of specific products.",
+    "browse_products": "List in-stock products, optionally within a budget.",
 }
 
 
@@ -45,3 +48,15 @@ class ShopTools:
         info = self.gateway.get_delivery_charge(self.shop_id, area_text)
         self.calls.append(ToolCall("get_delivery_charge", {"area": area_text}, "found" if info.found else "not found"))
         return info
+
+    def get_products(self, product_ids: Sequence[int]) -> list[ProductInfo]:
+        found = self.gateway.get_products(self.shop_id, list(product_ids))
+        self.calls.append(ToolCall("get_products", {"ids": list(product_ids)}, f"{len(found)} product(s)"))
+        return found
+
+    def browse_products(self, max_price: Decimal | None, limit: int) -> list[ProductInfo]:
+        found = self.gateway.browse_products(self.shop_id, max_price, limit)
+        self.calls.append(
+            ToolCall("browse_products", {"max_price": None if max_price is None else str(max_price)}, f"{len(found)} product(s)")
+        )
+        return found

@@ -101,3 +101,16 @@
 **Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
 
 **Prompt 9 — verification with a real model (gpt-4o-mini + text-embedding-3-small):** the proposal's example messages were run against the demo shop: replies used catalogue prices/stock exactly, answered in the customer's style (Banglish, English, Bangla script) and unknown questions got "I'll check with the shop". Reply time 1.9-4.5 s (target 8 s). Findings fixed: product/colour are now normalised to English by the understanding step (`product_name_en`) so Bangla-script questions find products; "eta" is resolved to the most recent product; replies use ASCII digits unless the customer wrote Bangla. `backend/scripts/debug_chat.py` prints what the AI understood and retrieved for any messages.
+
+## Prompt 10 — AI product suggestions
+**Built:**
+- AI engine: `suggestions.py` (needs extraction with structured output, candidate search, code-side filtering on live data: in stock, size, colour, budget, max 3), `budget.py` (reads "1500 er moddhe", "under 2000", "১৫০০ টাকার মধ্যে", "1.5k"), prompts `needs_system.md` / `needs_user.md`, fixed phrases `no_suggestion` and `ask_needs`; `ShopDataGateway` gets `get_products` and `browse_products`; `ProductInfo` gets `photos`. The suggestion branch is part of the existing `ConversationEngine` (no parallel pipeline).
+- Backend: gateway `get_products` / `browse_products` read the `products` table live (stock is never taken from embeddings) and return photo URLs; `ConversationService` already stores `extras`, so `suggested_products` is saved with the AI message and returned by the test-chat API.
+- Frontend: suggestion cards (photo, name, price) under the AI reply in the Test chat window.
+- Quality fixes found while testing with the real model: needs come from the latest message only; the reply must be in the customer's script/style (checked in code and shown with a concrete instruction); "I need a laptop under 5000" / "navy panjabi 1400 er moddhe" are now classified as suggestions.
+
+**Tables / endpoints / pages:** none new (the existing test-chat messages now include `extras.suggested_products`).
+**New env vars:** none.
+**Demo data:** `database/seed/demo_products.json` gains "Eid Special Panjabi" (1450, in stock) and "Premium Silk Panjabi" (1390, sold out) so the proposal example "eid er jonno 1500 er moddhe panjabi" has a real answer; `python -m app.cli seed` adds them.
+**Real-model check** (gpt-4o-mini + text-embedding-3-small, demo shop): "eid er jonno 1500 er moddhe panjabi" -> Eid Special Panjabi (1450 BDT) only; never the sold-out Premium Silk Panjabi (1390) nor Cotton Panjabi (1850); "I need a laptop under 5000" and "navy panjabi 1400 er moddhe" -> honest "could not find" with no cards; "kichu suggest korun" -> asks what the customer wants. Test-chat replies took 3-7 s. `backend/scripts/debug_chat.py` prints needs and cards.
+**Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.

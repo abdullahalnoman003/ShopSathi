@@ -24,5 +24,40 @@
     "banglish": "Bolun, ki help korte pari?",
     "bangla": "বলুন, কীভাবে সাহায্য করতে পারি?"
   },
-  "greeting_words": ["hi", "hello", "hey", "hii", "assalamu", "assalamualaikum", "salam", "salaam", "thanks", "thank", "thanku", "ok", "okay", "dhonnobad", "dhonnobaad", "shukriya", "হাই", "হ্যালো", "হেলো", "আসসালামু", "সালাম", "ধন্যবাদ", "ঠিকআছে", "ওকে"]
+  "greeting_words": [
+    "hi",
+    "hello",
+    "hey",
+    "hii",
+    "assalamu",
+    "assalamualaikum",
+    "salam",
+    "salaam",
+    "thanks",
+    "thank",
+    "thanku",
+    "ok",
+    "okay",
+    "dhonnobad",
+    "dhonnobaad",
+    "shukriya",
+    "হাই",
+    "হ্যালো",
+    "হেলো",
+    "আসসালামু",
+    "সালাম",
+    "ধন্যবাদ",
+    "ঠিকআছে",
+    "ওকে"
+  ],
+  "no_suggestion": {
+    "english": "Sorry, I could not find an in-stock product that matches what you asked for. You can tell me a different type, size, colour or budget, or I can check with the shop.",
+    "banglish": "Sorry, apni ja chaichen er sathe mile emon stock-e thaka kono product pelam na. Onno type, size, colour ba budget bolle dekhte pari, ba shop-er sathe check korte pari.",
+    "bangla": "দুঃখিত, আপনার চাওয়ার সাথে মেলে এমন স্টকে থাকা কোনো পণ্য পাইনি। অন্য ধরন, সাইজ, রঙ বা বাজেট বললে দেখতে পারি, অথবা দোকানের সাথে জেনে নিতে পারি।"
+  },
+  "ask_needs": {
+    "english": "Happy to help! What are you looking for? Tell me the type of product, and your budget, size or colour if you have one.",
+    "banglish": "Obossoi! Apni ki khujchen? Product-er type bolun, ar budget, size ba colour thakle seta o bolun.",
+    "bangla": "অবশ্যই! আপনি কী খুঁজছেন? পণ্যের ধরন বলুন, আর বাজেট, সাইজ বা রঙ থাকলে সেটাও বলুন।"
+  }
 }

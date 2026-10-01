@@ -14,6 +14,7 @@ import re
 from typing import Any
 
 from shopsathi_ai.language import detect_style, normalise_digits
+from shopsathi_ai.budget import parse_budget
 from shopsathi_ai.providers.base import EmbeddingProvider, EmbeddingResult, LLMProvider, LLMResult
 
 # ----------------------------------------------------------------------------- LLM
@@ -26,7 +27,7 @@ _KEYWORDS: list[tuple[str, tuple[str, ...]]] = [
     ("delivery", ("delivery", "deliver", "courier", "ডেলিভারি", "ডেলিভারী")),
     ("price", ("price", "dam", "daam", "koto", "kto", "cost", "taka", "দাম", "কত", "টাকা")),
     ("size_stock", ("size", "stock", "ache", "achhe", "available", "xl", "xxl", "has", "have", "আছে", "সাইজ", "স্টক")),
-    ("suggestion", ("suggest", "recommend", "dekhan", "dekhao", "show", "option", "দেখান", "দেখাও")),
+    ("suggestion", ("suggest", "recommend", "dekhan", "dekhao", "show", "option", "jonno", "moddhe", "budget", "under", "within", "below", "দেখান", "দেখাও")),
 ]
 _SIZE = re.compile(r"\b(xxxl|xxl|xl|xs|s|m|l|\d{2})\b", re.IGNORECASE)
 _AREA = re.compile(r"([A-Za-zঀ-৿][\wঀ-৿-]*(?: [A-Za-z][\w-]*)?)\s+(?:e|te|এ|তে)\s+(?:delivery|ডেলিভারি)", re.IGNORECASE)
@@ -35,6 +36,19 @@ _STOP = {
     "much", "does", "do", "you", "have", "this", "that", "eta", "ki", "e", "te", "er", "a", "an", "of", "in",
     "pawa", "jabe", "delivery", "charge", "for", "me", "show", "dekhan", "please", "pls", "available", "can",
     "i", "get", "it", "in", "stock", "ta", "ase", "nibo", "order", "want", "need", "lagbe", "chai",
+}
+
+
+_OCCASIONS = {"eid", "puja", "wedding", "biye", "party", "winter", "summer", "birthday", "ঈদ", "বিয়ে", "পূজা"}
+_COLOURS = {
+    "red": "red", "lal": "red", "লাল": "red", "blue": "blue", "nil": "blue", "black": "black", "kalo": "black",
+    "white": "white", "shada": "white", "green": "green", "sobuj": "green", "navy": "navy", "yellow": "yellow",
+    "holud": "yellow",
+}
+_SUGGEST_STOP = {
+    "jonno", "moddhe", "modhye", "niche", "under", "within", "below", "budget", "taka", "dekhan", "dekhao", "suggest",
+    "something", "kono", "kichu", "any", "some", "good", "best", "bhalo", "ache", "sathe", "टाकार", "টাকার", "মধ্যে",
+    "দেখান", "জন্য", "size", "colour", "color",
 }
 
 
@@ -47,6 +61,8 @@ class MockLLMProvider(LLMProvider):
         payload: dict[str, Any] = json.loads(match.group(1)) if match else {}
         if task == "understand":
             data = self._understand(payload)
+        elif task == "needs":
+            data = self._needs(payload)
         elif task == "reply":
             data = self._reply(payload)
         else:
@@ -66,6 +82,11 @@ class MockLLMProvider(LLMProvider):
             if any((k in words) or (not k.isascii() and k in lowered) for k in keywords):
                 intent = name
                 break
+        # "show me ... under 1500 taka" asks for suggestions, even though it mentions money or a size
+        asks_price = bool({"price", "dam", "daam", "koto", "kto"} & words) or "দাম" in lowered or "কত" in lowered
+        wants_to_see = bool({"suggest", "recommend", "dekhan", "dekhao", "show"} & words) or "দেখান" in lowered or "দেখাও" in lowered
+        if intent in ("price", "size_stock", "other") and wants_to_see and not asks_price:
+            intent = "suggestion"
         # "XL ache?" / "eta ki XL e pawa jabe?" are about size; a price word wins when both are present
         if intent == "size_stock" and ({"price", "dam", "daam", "koto"} & words) and not _SIZE.search(message):
             intent = "price"
@@ -91,6 +112,30 @@ class MockLLMProvider(LLMProvider):
             "entities": {"product_name": product, "size": size, "colour": None, "area": area},
             "language_style": detect_style(message),
             "confidence": 0.5,
+        }
+
+    # ---- needs for product suggestions: regex rules ----
+
+    def _needs(self, payload: dict[str, Any]) -> dict[str, Any]:
+        message = normalise_digits(str(payload.get("message", "")))
+        words = re.findall(r"[A-Za-z\u0980-\u09FF]+", message)
+        occasion = next((w.lower() for w in words if w.lower() in _OCCASIONS), None)
+        size_match = _SIZE.search(message)
+        size = size_match.group(1).upper() if size_match else None
+        if size and size.isdigit():
+            size = None  # bare numbers are prices or quantities here, not sizes
+        colour = next((_COLOURS[w.lower()] for w in words if w.lower() in _COLOURS), None)
+        skip = _STOP | _OCCASIONS | set(_COLOURS) | _SUGGEST_STOP
+        type_tokens = [w for w in words if w.lower() not in skip and len(w) > 2 and w.upper() != size]
+        product_type = " ".join(type_tokens) or None
+        budget = parse_budget(message)
+        return {
+            "product_type": product_type,
+            "product_type_en": product_type,
+            "budget_max": float(budget) if budget else None,
+            "size": size,
+            "colour": colour,
+            "occasion": occasion,
         }
 
     # ---- reply: templates over the structured facts ----

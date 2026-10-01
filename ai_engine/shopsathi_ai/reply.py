@@ -11,6 +11,16 @@ from shopsathi_ai.providers.base import LLMProvider, LLMResult
 from shopsathi_ai.understanding import Turn, turns_for_prompt
 
 _NUMBER = re.compile(r"\d+(?:[.,]\d+)*")
+_BANGLA_LETTER = re.compile(r"[\u0980-\u09FF]")
+
+
+def script_matches_style(text: str, style: str) -> bool:
+    """Bangla replies must be in Bangla script (English product names may be mixed in); English and Banglish
+    replies use English letters only."""
+    bangla_letters = len(_BANGLA_LETTER.findall(text))
+    if style == "bangla":
+        return bangla_letters >= 4
+    return bangla_letters == 0
 
 
 def numbers_in(text: str) -> set[Decimal]:
@@ -31,6 +41,16 @@ def ungrounded_numbers(reply: str, facts: list[str]) -> list[str]:
     for fact in facts:
         allowed |= numbers_in(fact)
     return sorted(format(n, "f") for n in numbers_in(reply) - allowed)
+
+
+#: shown to the model with every reply request: a concrete instruction and example beat an abstract rule
+STYLE_INSTRUCTIONS = {
+    "bangla": "Write the reply in Bangla script (বাংলা অক্ষরে). Keep product names as in the facts. "
+    "Example: 'Red Jamdani Saree এর দাম 4800 টাকা।'",
+    "banglish": "Write the reply in Banglish: Bangla words in English letters only, no Bangla script. "
+    "Example: 'Red Jamdani Saree er dam 4800 taka.'",
+    "english": "Write the reply in English, English letters only.",
+}
 
 
 @dataclass
@@ -60,6 +80,7 @@ def write_reply(llm: LLMProvider, req: ReplyRequest) -> ReplyOutcome:
         "message": req.message,
         "intent": req.intent,
         "language_style": req.language_style,
+        "write_in": STYLE_INSTRUCTIONS.get(req.language_style, ""),
         "shop_name": req.shop_name,
         "recent_messages": turns_for_prompt(req.recent_turns, req.max_turns, req.max_turn_chars),
         "facts": req.facts,
@@ -77,6 +98,13 @@ def write_reply(llm: LLMProvider, req: ReplyRequest) -> ReplyOutcome:
         if not text:
             retry_note = '\nYour previous answer had no reply text. Return {"reply": "..."}.\n'
             outcome.reason = "empty_reply"
+            continue
+        if not script_matches_style(text, req.language_style):
+            outcome.reason = "reply_wrong_script"
+            retry_note = (
+                f"\nYour previous reply was not in the customer's writing style ({req.language_style}). "
+                f"{STYLE_INSTRUCTIONS.get(req.language_style, '')}\n"
+            )
             continue
         bad = ungrounded_numbers(text, req.facts)
         if not bad:

@@ -31,6 +31,8 @@ class ProductInfo:
     colours: list[str] = field(default_factory=list)
     stock_count: int = 0
     description: str = ""
+    #: full photo URLs in order (the first one is shown with a suggestion)
+    photos: list[str] = field(default_factory=list)
     #: "name" = the product name matched the customer's words; "semantic" = found by embedding similarity
     match: Literal["name", "semantic"] = "name"
     #: fraction of query words found in the name (name matches) or cosine similarity (semantic matches)
@@ -101,4 +103,14 @@ class ShopDataGateway(Protocol):
 
     def get_delivery_charge(self, shop_id: int, area_text: str) -> DeliveryChargeInfo:
         """Exact (normalised) match of an area in this shop's policy. No guessing."""
+        ...
+
+    # ---- product suggestions (Prompt 10): live reads from the products table ----
+
+    def get_products(self, shop_id: int, product_ids: Sequence[int]) -> list[ProductInfo]:
+        """Current data (price, stock, photos) of these products of THIS shop; unknown ids are skipped."""
+        ...
+
+    def browse_products(self, shop_id: int, max_price: Decimal | None, limit: int) -> list[ProductInfo]:
+        """In-stock products of THIS shop, optionally at or below ``max_price``."""
         ...

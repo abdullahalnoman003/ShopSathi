@@ -6,15 +6,26 @@
       "description": "Hand-woven red Jamdani saree with traditional floral motifs. Soft cotton-silk blend, comes with blouse piece.",
       "price": 4800,
       "sizes": [],
-      "colours": ["Red"],
+      "colours": [
+        "Red"
+      ],
       "stock_count": 6
     },
     {
       "name": "Cotton Panjabi",
       "description": "Comfortable everyday cotton panjabi with chest embroidery. Regular fit.",
       "price": 1850,
-      "sizes": ["M", "L", "XL", "XXL"],
-      "colours": ["White", "Navy", "Maroon"],
+      "sizes": [
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "colours": [
+        "White",
+        "Navy",
+        "Maroon"
+      ],
       "stock_count": 24
     },
     {
@@ -22,14 +33,19 @@
       "description": "Handmade Nakshi Kantha embroidery, about 18 x 24 inches. Each piece is slightly different.",
       "price": 2200,
       "sizes": [],
-      "colours": ["Multicolour"],
+      "colours": [
+        "Multicolour"
+      ],
       "stock_count": 5
     },
     {
       "name": "Homemade Mango Pickle (Achar) 500g",
       "description": "Sun-dried green mango pickle made in small batches with mustard oil. 500 gram jar.",
       "price": 450,
-      "sizes": ["250g", "500g"],
+      "sizes": [
+        "250g",
+        "500g"
+      ],
       "colours": [],
       "stock_count": 40
     },
@@ -38,7 +54,40 @@
       "description": "Long-lasting matte lipstick, skin-safe formula.",
       "price": 650,
       "sizes": [],
-      "colours": ["Rose", "Coral", "Brick Red"],
+      "colours": [
+        "Rose",
+        "Coral",
+        "Brick Red"
+      ],
+      "stock_count": 0
+    },
+    {
+      "name": "Eid Special Panjabi",
+      "description": "Light embroidered panjabi for festive occasions such as Eid. Soft cotton blend.",
+      "price": 1450,
+      "sizes": [
+        "M",
+        "L",
+        "XL"
+      ],
+      "colours": [
+        "White",
+        "Cream"
+      ],
+      "stock_count": 8
+    },
+    {
+      "name": "Premium Silk Panjabi",
+      "description": "Silk-blend panjabi with hand embroidery for weddings and Eid. Currently sold out.",
+      "price": 1390,
+      "sizes": [
+        "M",
+        "L",
+        "XL"
+      ],
+      "colours": [
+        "Navy"
+      ],
       "stock_count": 0
     }
   ],
@@ -48,7 +97,10 @@
       "description": "Bluetooth 5.3 earbuds with charging case, up to 20 hours total playtime.",
       "price": 1450,
       "sizes": [],
-      "colours": ["Black", "White"],
+      "colours": [
+        "Black",
+        "White"
+      ],
       "stock_count": 15
     },
     {
@@ -56,7 +108,9 @@
       "description": "Slim 10000mAh power bank with dual USB output and fast charging.",
       "price": 1250,
       "sizes": [],
-      "colours": ["Black"],
+      "colours": [
+        "Black"
+      ],
       "stock_count": 0
     },
     {
@@ -64,15 +118,25 @@
       "description": "Fitness smart watch with heart-rate tracking and 7-day battery.",
       "price": 2990,
       "sizes": [],
-      "colours": ["Black", "Silver", "Blue"],
+      "colours": [
+        "Black",
+        "Silver",
+        "Blue"
+      ],
       "stock_count": 8
     },
     {
       "name": "Phone Back Cover",
       "description": "Shock-proof transparent back cover.",
       "price": 250,
-      "sizes": ["Small", "Medium", "Large"],
-      "colours": ["Clear"],
+      "sizes": [
+        "Small",
+        "Medium",
+        "Large"
+      ],
+      "colours": [
+        "Clear"
+      ],
       "stock_count": 60
     }
   ]

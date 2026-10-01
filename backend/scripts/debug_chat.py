@@ -39,6 +39,9 @@ def main() -> int:
             vec = embedder.embed_with_usage([message], is_query=True).vectors[0]
             hits = gateway.vector_search(user.shop_id, vec, 4)
             print("  retrieval scores:", [(round(h.score, 3), h.content.splitlines()[0][:40]) for h in hits])
+            if "suggested_products" in r.extras:
+                print("  needs:", r.extras.get("needs"))
+                print("  cards:", [(c["name"], c["price"], bool(c["photo"])) for c in r.extras["suggested_products"]])
             print(f"  reply: {r.reply_text.split(chr(10))[-1]!r}\n")
         db.execute(delete(Chat).where(Chat.id == chat.id))
         db.commit()

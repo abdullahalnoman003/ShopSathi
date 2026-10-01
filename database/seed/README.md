@@ -11,3 +11,5 @@ Only **fictional** demo shops and products belong here - never real customer dat
 `sample_products_import.csv` is a test file for the dashboard's CSV/Excel import: 11 fictional rows, of which 4 import and 7 fail (missing name, price 0, non-numeric price, 6 photos, negative stock, duplicate size, several problems). It is not loaded by `app.cli seed`.
 
 `demo_policies.json` holds fictional shop policies (delivery areas with charges, delivery time, return rules, payment options) per demo shop owner email.
+
+`demo_products.json` also contains "Eid Special Panjabi" (in stock, 1450) and "Premium Silk Panjabi" (sold out) so product suggestions can be tried with the proposal's example "eid er jonno 1500 er moddhe panjabi".

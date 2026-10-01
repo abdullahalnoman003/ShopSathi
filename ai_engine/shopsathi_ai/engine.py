@@ -14,10 +14,11 @@ from shopsathi_ai.language import LanguageStyle, detect_style, normalise_digits
 from shopsathi_ai.phrases import is_greeting, phrase
 from shopsathi_ai.providers.base import EmbeddingProvider, EmbeddingProviderError, LLMProvider, LLMProviderError, LLMResult
 from shopsathi_ai.reply import ReplyRequest, write_reply
+from shopsathi_ai.suggestions import SuggestionConfig, extract_needs, find_suggestions, suggestion_card
 from shopsathi_ai.tools import ShopTools
 from shopsathi_ai.understanding import Turn, Understanding, understand
 
-PRODUCT_INTENTS = ("price", "size_stock", "suggestion")
+PRODUCT_INTENTS = ("price", "size_stock")
 
 
 @dataclass
@@ -30,6 +31,8 @@ class EngineConfig:
     #: name matches need at least this fraction of the customer's words in the product name
     min_name_match: float = 0.5
     max_products: int = 3
+    #: how many candidate products the suggestion step looks at before filtering
+    suggestion_pool: int = 10
     max_recent_turns: int = 6
     max_turn_chars: int = 300
 
@@ -132,7 +135,7 @@ class ConversationEngine:
         und: Understanding = outcome.understanding
         run.intent, run.confidence = und.intent, und.confidence
         run.entities = und.entities.model_dump()
-        if und.intent in ("price", "size_stock", "suggestion", "delivery") and not run.entities["product_name"]:
+        if und.intent in ("price", "size_stock", "delivery") and not run.entities["product_name"]:
             run.entities["product_name"] = self._product_from_history(run.ctx.recent_turns)
         if run.entities["size"]:
             run.entities["size"] = run.entities["size"].upper()
@@ -145,6 +148,9 @@ class ConversationEngine:
 
         if und.intent == "other" and is_greeting(run.message):
             return self._finish(run, phrase("greeting", run.style), Handover())
+
+        if und.intent == "suggestion":
+            return self._suggest(run)
 
         if und.intent in ("price", "size_stock") and not run.entities["product_name"]:
             return self._finish(run, phrase("ask_product", run.style), Handover(), extras={"clarification": "product"})
@@ -190,6 +196,74 @@ class ConversationEngine:
             "product_ids": product_ids,
             "sources": [{"type": c.source_type, "id": c.source_id} for c in chunks],
         }
+        return self._finish(run, reply.text, Handover(), extras=extras)
+
+    # ------------------------------------------------------------ suggestions
+
+    def _suggest(self, run: _Run) -> EngineResult:
+        """AI-3: 1-3 in-stock products that match the stated needs, with price and photo."""
+        cfg = self.config
+        out = extract_needs(
+            self.llm, run.message, run.ctx.recent_turns, run.entities,
+            max_turns=cfg.max_recent_turns, max_turn_chars=cfg.max_turn_chars,
+        )
+        run.add_llm("suggestion_needs", out.usage)
+        needs = out.needs
+        needs_info = {
+            "product_type": needs.product_type_en or needs.product_type,
+            "budget_max": None if needs.budget_max is None else float(needs.budget_max),
+            "size": needs.size,
+            "colour": needs.colour,
+            "occasion": needs.occasion,
+        }
+        if needs.is_empty():
+            return self._finish(
+                run, phrase("ask_needs", run.style), Handover(), extras={"suggested_products": [], "clarification": "needs"}
+            )
+
+        query_text = " ".join(
+            x for x in (needs.product_type_en, needs.product_type, needs.occasion, needs.colour, run.message) if x
+        )
+        embedded = self.embedder.embed_with_usage([query_text], is_query=True)
+        self.gateway.log_ai_usage(run.shop_id, "embedding", embedded.provider, embedded.model, embedded.input_tokens)
+
+        picked = find_suggestions(
+            run.tools,
+            self.gateway,
+            run.shop_id,
+            needs,
+            embedded.vectors[0],
+            SuggestionConfig(
+                pool=cfg.suggestion_pool, min_name_match=cfg.min_name_match, min_product_score=cfg.min_product_score
+            ),
+        )
+        extras: dict[str, Any] = {"suggested_products": [], "needs": needs_info}
+        if not picked:
+            return self._finish(run, phrase("no_suggestion", run.style), Handover(), extras=extras)
+
+        reply = write_reply(
+            self.llm,
+            ReplyRequest(
+                message=run.message,
+                intent="suggestion",
+                language_style=run.style,
+                facts=[product_fact(p) for p in picked],
+                structured={"products": [product_dict(p) for p in picked]},
+                recent_turns=run.ctx.recent_turns,
+                shop_name=run.ctx.shop_name,
+                max_turns=cfg.max_recent_turns,
+                max_turn_chars=cfg.max_turn_chars,
+            ),
+        )
+        run.add_llm("chat_reply", reply.usage)
+        if reply.text is None:  # could not write a verified reply: no cards either
+            return self._finish(
+                run, phrase("check_with_shop", run.style), Handover(True, reply.reason or "reply_not_grounded"), extras=extras
+            )
+        extras["suggested_products"] = [suggestion_card(p) for p in picked]
+        extras["product_ids"] = [p.id for p in picked]
+        if len(picked) == 1:  # "eta ki XL e pawa jabe?" can then refer to it
+            run.entities["product_name"] = picked[0].name
         return self._finish(run, reply.text, Handover(), extras=extras)
 
     # ------------------------------------------------------------------ facts

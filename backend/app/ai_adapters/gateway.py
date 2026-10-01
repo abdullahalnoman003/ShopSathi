@@ -4,6 +4,7 @@ Every query here is scoped by shop_id: one shop's data is never used for another
 """
 
 import re
+from decimal import Decimal
 from typing import Sequence
 
 from shopsathi_ai.chunking import SourceType
@@ -14,8 +15,10 @@ from sqlalchemy.orm import Session
 from app.models import EmbeddingChunk, Product
 from app.services.ai_usage import log_ai_usage
 from app.services.policy import PolicyService
+from app.services.storage import StorageService
 from app.services.tenant import scoped_select
 
+_STORAGE = StorageService  # builds photo URLs (uploaded files and external URLs)
 _WORD = re.compile(r"[\wঀ-৿]+", re.UNICODE)
 
 
@@ -33,7 +36,8 @@ def _like(token: str) -> str:
     return f"%{escaped}%"
 
 
-def _info(p: Product, match: str, score: float) -> ProductInfo:
+def _info(p: Product, match: str, score: float, storage: StorageService | None = None) -> ProductInfo:
+    storage = storage or _STORAGE()
     return ProductInfo(
         id=p.id,
         name=p.name,
@@ -42,6 +46,7 @@ def _info(p: Product, match: str, score: float) -> ProductInfo:
         colours=list(p.colours),
         stock_count=p.stock_count,
         description=p.description,
+        photos=[storage.url(k) for k in p.photos],
         match=match,  # type: ignore[arg-type]
         score=score,
     )
@@ -145,3 +150,20 @@ class BackendShopDataGateway:
     def get_delivery_charge(self, shop_id: int, area_text: str) -> DeliveryChargeInfo:
         found = PolicyService(self.db, shop_id).get_delivery_charge(area_text)
         return DeliveryChargeInfo(found=found.found, area_name=found.area_name, charge=found.charge)
+
+    # ---- product suggestions (Prompt 10): always read from the products table, so stock is current ----
+
+    def get_products(self, shop_id: int, product_ids: Sequence[int]) -> list[ProductInfo]:
+        if not product_ids:
+            return []
+        rows = self.db.scalars(scoped_select(Product, shop_id).where(Product.id.in_(list(product_ids)))).all()
+        by_id = {p.id: p for p in rows}
+        storage = StorageService()
+        return [_info(by_id[i], "name", 1.0, storage) for i in product_ids if i in by_id]
+
+    def browse_products(self, shop_id: int, max_price: Decimal | None, limit: int) -> list[ProductInfo]:
+        stmt = scoped_select(Product, shop_id).where(Product.stock_count > 0)
+        if max_price is not None:
+            stmt = stmt.where(Product.price <= max_price)
+        storage = StorageService()
+        return [_info(p, "name", 0.0, storage) for p in self.db.scalars(stmt.order_by(Product.id.desc()).limit(limit))]
