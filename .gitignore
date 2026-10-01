@@ -15,7 +15,7 @@ out/
 # Env files (keep examples)
 .env
 .env.*
-!.env.example
+
 # Media uploads
 media/
 uploads/
@@ -28,6 +28,11 @@ celerybeat-schedule*
 # ignore forntend 
 frontend/
 
+# Agent files
+AGENTS.md
+CLAUDE.md
+CODE_GUIDE.md
+ROADMAP.md
 
 __pycache__/
 __pycache__

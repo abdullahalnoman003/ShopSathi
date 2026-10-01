@@ -7,6 +7,9 @@ from app.core.config import get_settings
 _s = get_settings()
 os.environ["DATABASE_URL"] = _s.test_database_url
 os.environ["REDIS_URL"] = _s.redis_url.rsplit("/", 1)[0] + "/15"
+os.environ["CELERY_TASK_ALWAYS_EAGER"] = "true"  # run background jobs inline in tests
+os.environ["EMBEDDING_PROVIDER"] = "mock"  # never call a real provider from tests
+os.environ["EMBEDDING_DIM"] = "1536"
 os.environ["MEDIA_ROOT"] = tempfile.mkdtemp(prefix="shopsathi-test-media-")
 get_settings.cache_clear()
 

@@ -13,17 +13,22 @@ MAX_PHOTOS = 5
 
 
 class ProductHooks:
-    """HOOK POINT for Prompt 8 (embeddings): called after a product is created, updated, or had photos
-    changed (`product_changed`) and after it is deleted (`product_deleted`).
-
-    Both are no-ops now. Prompt 8 replaces/extends them to refresh or remove the product's embedding.
+    """Called after a product is created, updated, or had photos changed (`product_changed`) and after
+    it is deleted (`product_deleted`). They queue the background jobs that keep the product's embeddings
+    fresh (Prompt 8, AI-R13). Queueing never fails the request.
     """
 
     def product_changed(self, shop_id: int, product_id: int) -> None:
-        pass
+        from app.workers.dispatch import enqueue
+        from app.workers.tasks import embed_product
+
+        enqueue(embed_product, product_id)
 
     def product_deleted(self, shop_id: int, product_id: int) -> None:
-        pass
+        from app.workers.dispatch import enqueue
+        from app.workers.tasks import delete_product_embeddings
+
+        enqueue(delete_product_embeddings, product_id, shop_id)
 
 
 product_hooks = ProductHooks()

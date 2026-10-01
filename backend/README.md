@@ -9,4 +9,5 @@ uvicorn app.main:app --reload                       # http://localhost:8000/api/
 celery -A app.workers.celery_app worker --loglevel=info --pool=solo   # --pool=solo is needed on Windows
 pytest
 python -m app.cli --help
+python -m app.cli reembed-all                       # (re)build all embeddings; needs no worker
 ```

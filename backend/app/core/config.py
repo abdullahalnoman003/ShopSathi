@@ -20,6 +20,23 @@ class Settings(BaseSettings):
     media_root: str = "media"
     max_upload_mb: int = 5
 
+    # AI engine settings (the backend passes them to shopsathi_ai; it does not read os.environ itself)
+    llm_provider: str = "mock"
+    llm_model: str = "gpt-4o-mini"
+    embedding_provider: str = "mock"  # openai | local | mock
+    embedding_model: str = "text-embedding-3-small"
+    embedding_dim: int = 1536  # must match the embedding_chunks.embedding column
+    openai_api_key: str = ""
+    gemini_api_key: str = ""
+    # Cost per model in USD per 1M tokens, used for ai_usage_logs.estimated_cost. JSON in the env var.
+    ai_cost_rates: dict[str, dict[str, float]] = {
+        "text-embedding-3-small": {"input_per_1m": 0.02},
+        "text-embedding-3-large": {"input_per_1m": 0.13},
+    }
+
+    # Background jobs: run Celery tasks inline (used by automated tests only)
+    celery_task_always_eager: bool = False
+
     # CSV/Excel product import limits
     max_import_mb: int = 2
     max_import_rows: int = 1000

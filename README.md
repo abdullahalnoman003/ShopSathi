@@ -24,7 +24,7 @@ Docker, Python 3.11+, Node 20+.
    python -m app.cli seed          # optional: fictional demo shops
    uvicorn app.main:app --reload   # http://localhost:8000/api/v1/health
    ```
-3. Celery worker (separate terminal, venv active; `--pool=solo` for Windows):
+3. Celery worker (separate terminal, venv active; `--pool=solo` for Windows). It keeps product and policy embeddings up to date, so keep it running:
    ```bash
    celery -A app.workers.celery_app worker --loglevel=info --pool=solo
    ```

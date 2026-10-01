@@ -7,7 +7,7 @@ them to demo or ship product behaviour.
 import hashlib
 from typing import Any
 
-from shopsathi_ai.providers.base import EmbeddingProvider, LLMProvider
+from shopsathi_ai.providers.base import EmbeddingProvider, EmbeddingResult, LLMProvider
 
 
 class MockLLMProvider(LLMProvider):
@@ -16,6 +16,11 @@ class MockLLMProvider(LLMProvider):
 
 
 class MockEmbeddingProvider(EmbeddingProvider):
+    """Same text -> same vector. Different texts -> unrelated vectors (no semantics)."""
+
+    name = "mock"
+    model = "mock"
+
     def __init__(self, dim: int = 1536) -> None:
         self._dim = dim
 
@@ -23,14 +28,15 @@ class MockEmbeddingProvider(EmbeddingProvider):
     def dim(self) -> int:
         return self._dim
 
-    def embed(self, texts: list[str]) -> list[list[float]]:
-        return [self._vector(t) for t in texts]
+    def embed_with_usage(self, texts: list[str], *, is_query: bool = False) -> EmbeddingResult:
+        tokens = sum(len(t.split()) for t in texts)  # rough, deterministic
+        return EmbeddingResult([self._vector(t) for t in texts], tokens, self.name, self.model)
 
     def _vector(self, text: str) -> list[float]:
         out: list[float] = []
         counter = 0
         while len(out) < self._dim:
             digest = hashlib.sha256(f"{counter}:{text}".encode()).digest()
-            out.extend(b / 255.0 for b in digest)
+            out.extend(b / 255.0 - 0.5 for b in digest)  # centred so unrelated texts are not all "close"
             counter += 1
         return out[: self._dim]

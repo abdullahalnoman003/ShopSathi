@@ -71,3 +71,17 @@
 **Seed:** `database/seed/demo_policies.json`, loaded by `python -m app.cli seed` (skips shops that already have a policy).
 **Upgrade steps:** `alembic upgrade head`, `python -m app.cli seed`.
 **Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.
+
+## Prompt 8 — Embeddings & RAG retrieval (per shop)
+**Built:**
+- AI engine: embedding providers behind `EmbeddingProvider` returning vectors + token usage (`openai` text-embedding-3-small over HTTPS, `local` sentence-transformers model, `mock`); `chunking.py` (product and policy chunks with `source_type`/`source_id`); `ShopDataGateway` protocol (`vector_search`, `log_ai_usage`); `retrieval.retrieve(shop_id, query_text, top_k, embedder=, gateway=)`.
+- Backend: `embedding_chunks` (pgvector, HNSW cosine index) and `ai_usage_logs`; `BackendShopDataGateway` (always filtered by `shop_id`); `EmbeddingService`; Celery tasks `embed_product`, `delete_product_embeddings`, `embed_policy` wired into the product/policy hooks (manual edits, CSV import, policy save); per-shop cost logging; CLI `reembed-shop`, `reembed-all`; `seed` queues embeddings for demo products and policies.
+
+**Tables (migration 0006):** `embedding_chunks`, `ai_usage_logs`.
+**Endpoints / pages:** none (no frontend changes).
+**Background jobs:** `shopsathi.embed_product`, `shopsathi.delete_product_embeddings`, `shopsathi.embed_policy`. The Celery worker must be running.
+**CLI:** `python -m app.cli reembed-shop --shop-id N`, `python -m app.cli reembed-all [--resize-column]`.
+**New env vars (backend):** `EMBEDDING_PROVIDER`, `EMBEDDING_MODEL`, `EMBEDDING_DIM`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, `LLM_PROVIDER`, `LLM_MODEL` (now read by the backend and passed to the AI engine), `AI_COST_RATES`, `CELERY_TASK_ALWAYS_EAGER` (tests only). New dependency of `ai_engine`: `httpx`; optional extra `local` (sentence-transformers).
+**Scripts:** `backend/scripts/check_embedding_latency.py` (AI-R13 timing), `backend/scripts/check_semantic_search.py` (needs a real provider).
+**Upgrade steps:** `pip install -r requirements.txt`, `alembic upgrade head`, `python -m app.cli reembed-all` (builds embeddings for existing products/policies), start the Celery worker.
+**Run tests:** `cd backend && pytest`; `cd ai_engine && pytest`; `cd frontend && npm run lint && npm run build`.

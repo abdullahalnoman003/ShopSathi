@@ -8,7 +8,7 @@ import secrets
 import sys
 from pathlib import Path
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from app.core.config import get_settings
 from app.core.database import SessionLocal
@@ -16,7 +16,9 @@ from app.core.security import hash_password
 from app.models import Product, Shop, ShopPolicy, User
 from app.schemas.policy import PolicyIn
 from app.services.plans import get_plan_by_code, seed_plans
+from app.services.embeddings import DimensionMismatch, EmbeddingService
 from app.services.policy import PolicyService
+from app.services.products import product_hooks
 
 SEED_DIR = Path(__file__).resolve().parents[2] / "database" / "seed"
 
@@ -57,12 +59,18 @@ def seed_demo_products(db) -> None:
             continue
         existing = set(db.scalars(select(Product.name).where(Product.shop_id == owner.shop_id)))
         created = 0
+        new_products: list[Product] = []
         for item in products:
             if item["name"] in existing:
                 continue
-            db.add(Product(shop_id=owner.shop_id, photos=[], **item))
+            product = Product(shop_id=owner.shop_id, photos=[], **item)
+            db.add(product)
+            db.flush()
+            new_products.append(product)
             created += 1
         db.commit()
+        for product in new_products:  # queue the embedding job for each new product
+            product_hooks.product_changed(owner.shop_id, product.id)
         print(f"products: {created} created for {owner_email}")
 
 
@@ -80,6 +88,43 @@ def seed_demo_policies(db) -> None:
             continue
         PolicyService(db, owner.shop_id).save(PolicyIn(**policy))
         print(f"policy: created for {owner_email}")
+
+
+def _reembed(shop_ids: list[int], resize_column: bool = False) -> int:
+    with SessionLocal() as db:
+        svc = EmbeddingService(db)
+        if resize_column:
+            want = get_settings().embedding_dim
+            # The column holds derived data only, so it is safe to empty it before changing its size.
+            db.execute(text("TRUNCATE embedding_chunks"))
+            db.execute(text(f"ALTER TABLE embedding_chunks ALTER COLUMN embedding TYPE vector({int(want)})"))
+            db.commit()
+            print(f"embedding column resized to vector({want})")
+        try:
+            for shop_id in shop_ids:
+                r = svc.reembed_shop(shop_id)
+                print(
+                    f"shop {shop_id}: {r['products']} products -> {r['product_chunks']} chunks, "
+                    f"{r['policy_chunks']} policy chunks, {r['orphans_removed']} orphans removed"
+                )
+        except DimensionMismatch as e:
+            print(str(e), file=sys.stderr)
+            return 1
+    return 0
+
+
+def reembed_shop(shop_id: int) -> int:
+    with SessionLocal() as db:
+        if db.get(Shop, shop_id) is None:
+            print(f"No shop with id {shop_id}", file=sys.stderr)
+            return 1
+    return _reembed([shop_id])
+
+
+def reembed_all(resize_column: bool) -> int:
+    with SessionLocal() as db:
+        ids = list(db.scalars(select(Shop.id).order_by(Shop.id)))
+    return _reembed(ids, resize_column)
 
 
 def seed() -> int:
@@ -124,10 +169,22 @@ def main(argv: list[str] | None = None) -> int:
     p_admin = sub.add_parser("create-admin", help="create a platform_admin user")
     p_admin.add_argument("--email", required=True)
     p_admin.add_argument("--full-name", default="Platform Admin")
+    p_shop = sub.add_parser("reembed-shop", help="rebuild all embeddings of one shop (synchronously)")
+    p_shop.add_argument("--shop-id", type=int, required=True)
+    p_all = sub.add_parser("reembed-all", help="rebuild embeddings of every shop (after changing the model)")
+    p_all.add_argument(
+        "--resize-column",
+        action="store_true",
+        help="also change the vector column to EMBEDDING_DIM (empties and rebuilds all embeddings)",
+    )
     sub.add_parser("seed", help="create fictional demo shops and owners (idempotent)")
     args = parser.parse_args(argv)
     if args.command == "create-admin":
         return create_admin(args.email, args.full_name)
+    if args.command == "reembed-shop":
+        return reembed_shop(args.shop_id)
+    if args.command == "reembed-all":
+        return reembed_all(args.resize_column)
     if args.command == "seed":
         return seed()
     parser.print_help()

@@ -14,13 +14,15 @@ from app.services.tenant import scoped_select
 
 
 class PolicyHooks:
-    """HOOK POINT for Prompt 8 (embeddings): `policy_changed` is called after a shop's policy is saved.
-
-    It is a no-op now. Prompt 8 replaces/extends it to refresh the policy's embeddings.
+    """`policy_changed` is called after a shop's policy is saved. It queues the job that re-embeds the
+    shop's policy chunks (Prompt 8). Queueing never fails the request.
     """
 
     def policy_changed(self, shop_id: int) -> None:
-        pass
+        from app.workers.dispatch import enqueue
+        from app.workers.tasks import embed_policy
+
+        enqueue(embed_policy, shop_id)
 
 
 policy_hooks = PolicyHooks()
