@@ -153,3 +153,83 @@ python -m scripts.loadtest.run_loadtest setup && python -m scripts.loadtest.run_
 ```
 
 Raw results of every run are written to `backend/scripts/loadtest/results/` (git-ignored).
+
+
+---
+
+# Part 2 (Prompt 23): deployment packaging, NFR-05 and NFR-06
+
+Date of the runs: 2026-10-02.
+
+## 8. Production stack, tested locally
+
+`deploy/docker-compose.prod.yml` was built and run on the same Windows machine (Docker 29.8, Compose 5.5) with a local
+configuration (`deploy/.env.prod`, git-ignored): mock AI, the load test's stub in place of Facebook (reached as
+`host.docker.internal:8098`), site names `api.localhost` / `app.localhost` and HTTPS on port 8443. Caddy made its own local
+certificate for them (real hosts get Let's Encrypt certificates automatically, which cannot be tried on a laptop).
+
+| Check | Result |
+|---|---|
+| Images build: `shopsathi-backend` (694 MB, non-root user uid 10001, no secret in its environment or layers) and `shopsathi-frontend` (309 MB, Next.js standalone, user `node`) | Pass |
+| `docker compose up -d`: postgres, redis, api, worker, beat, frontend, proxy all reach *healthy* (the worker and beat wait for the api; the proxy waits for api and frontend) | Pass |
+| The api ran the Alembic migrations by itself on first start (and again, harmlessly, on every restart) | Pass |
+| `GET https://api.localhost:8443/api/v1/health` through the proxy: 200 `{"status":"ok","api":"ok","database":"ok","redis":"ok"}`; `GET https://app.localhost:8443/login`: 200 | Pass |
+| HTTP is redirected to HTTPS (308); HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` added by the proxy; `Server` header removed | Pass |
+| API docs and `openapi.json` are not published in production (404) | Pass |
+| CORS: `https://app.localhost:8443` is allowed, `https://evil.example` gets no permission | Pass |
+| First run: `cli create-admin` and `cli seed` ran in a one-off container; admin login works | Pass |
+| Meta's webhook handshake through HTTPS (`hub.challenge` echoed for the right verify token, 403 for a wrong one) | Pass |
+| Messenger simulation script run inside the compose network (`scripts/simulate_messenger_event.py`): webhook accepted, the **worker container** answered, the reply reached the stub for the right customer | Pass |
+| A correctly signed event through the HTTPS proxy: accepted and answered in 0.22 s (mock AI); a bad signature: 403 | Pass |
+| Restart policy: the api process was stopped (SIGTERM); Docker started it again and it was healthy after about 35 s (note: `docker kill` is treated as a manual stop and is not restarted; that is Docker's behaviour) | Pass |
+| Proxy started before the api was ready answered 503 for up to 30 s | Found and fixed: the proxy now waits for a healthy api (`depends_on: service_healthy`) and retries for 15 s (`lb_try_duration`), health checks every 10 s |
+| The beat container was reported *unhealthy* because it inherited the api's health check | Found and fixed: it has its own process check |
+| Site address with a port (`api.localhost:8443`) made Caddy listen on 8443 inside the container | Found and fixed: addresses must be host names only; the published port is set with `HTTPS_PORT` |
+
+Not tested here: a real server with public DNS and Let's Encrypt, Render, Railway and Vercel deployments, and Meta's own
+webhook verification and a real Facebook message. **They need accounts and credentials that were not available**; the exact
+steps are in `docs/DEPLOYMENT.md` (sections 2, 3 and 5) and the first thing to do with credentials is the "Quick checks after a
+deploy" in section 8 of that file.
+
+## 9. NFR-05: a new seller signs up, adds 5 products and tests the AI in under 15 minutes
+
+Walkthrough on the running dashboard (production build of the frontend, real model `gpt-4o-mini`, a brand new shop).
+The steps were driven in the browser by script, so the times below are the **machine and network time** for every step
+without a person's typing and reading; the estimate for a person follows.
+
+| Step (all through the real screens) | Elapsed (script) |
+|---|---|
+| Sign up (shop name, owner name, e-mail, password, Free plan) | 4.5 s |
+| Add product 1: name, price, stock | 14.9 s (includes opening the page) |
+| Add products 2 to 5 (same three fields each) | 30.2 s, 34.1 s, 38.0 s, 41.8 s |
+| Test chat: start a conversation, ask `Cotton Panjabi er dam koto?` | the reply `Cotton Panjabi er dam 1850 BDT.` appeared after **6.2 s** (58.5 s from the start) |
+
+The script needs **58.5 s** in total. A person has to type about 4 fields for sign-up (about 60 characters), 3 short fields
+for each of 5 products (about 120 characters), open the product form five times, and type one question: roughly 220
+characters and 25 clicks, which is about 3 to 4 minutes at a slow typing speed of 20 words per minute, plus reading. Adding the
+photos, sizes and colours is optional; importing a CSV/Excel file instead of typing the products takes about the same. **Estimated
+total: 5 to 8 minutes, well under the 15-minute target.** A stopwatch walkthrough with a real first-time user (not done here) would
+turn the estimate into a measurement; the user guide's Part 1 (sections 1 to 4) is written for that walkthrough.
+
+## 10. NFR-06: every page at phone width (375 px) and laptop width (1366 px)
+
+All pages were opened in a browser at both widths (each in an iframe of exactly that width, logged in as the demo owner or as a
+platform admin, with the demo data: products, chats, orders, reports). For each page the check is: no horizontal scroll of the
+page, and no element sticking out of the screen except inside a deliberately scrollable area. The check itself was verified
+first on a page known to be too wide (it correctly reported the overflow).
+
+| Area | Pages | 375 px | 1366 px |
+|---|---|---|---|
+| Public | `/`, `/login`, `/signup`, `/forgot-password`, `/reset-password` | pass | pass |
+| Seller | `/dashboard`, `/dashboard/products`, `/products/new`, `/products/[id]`, `/dashboard/policy`, `/dashboard/test-chat`, `/dashboard/facebook`, `/dashboard/plan`, `/dashboard/staff`, `/dashboard/settings`, `/dashboard/inbox`, `/dashboard/inbox/[id]`, `/dashboard/orders`, `/dashboard/orders/[id]`, `/dashboard/reports` | pass | pass |
+| Admin | `/admin`, `/admin/shops/[id]`, `/admin/plans`, `/admin/ai-usage`, `/admin/health` | pass | pass |
+
+**70 of 70 checks passed; no layout bug was found, so no layout was changed.** The pages that had been looked at by eye at phone
+width in earlier prompts (orders, reports, inbox, admin) were also checked this way. What this does not prove: touch-target
+size, text legibility and a real phone's browser (it uses an emulated width in a desktop browser). The production container
+could not be opened in the browser (its local certificate is not trusted); the same code was checked on the development server.
+
+## 11. Final test run
+
+Last run, after all changes of this prompt: backend `pytest` 396 passed; AI engine `pytest` 251 passed; evaluation `pytest` 82 passed;
+frontend `npm run lint` clean and `npm run build` succeeded.

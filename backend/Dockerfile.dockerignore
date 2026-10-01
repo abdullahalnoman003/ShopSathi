@@ -1,0 +1,25 @@
+# Used with the repository root as build context (docker build -f backend/Dockerfile .)
+**/.git
+**/.venv
+**/venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules
+**/.next
+backend/tests
+backend/scripts
+backend/media
+ai_engine/tests
+ai_engine/*.egg-info
+evaluation
+frontend
+deploy
+docs
+database/docker-compose.yml
+database/init
+database/.env
+README.md

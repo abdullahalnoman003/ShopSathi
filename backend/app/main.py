@@ -12,7 +12,9 @@ from app.core.log_masking import install_log_masking
 settings = get_settings()
 install_log_masking()  # no personal data or secrets in the logs
 
-app = FastAPI(title="ShopSathi API", version="0.1.0")
+# The interactive API docs are for development; a deployment does not publish its endpoint list.
+_docs = {} if settings.is_local else {"docs_url": None, "redoc_url": None, "openapi_url": None}
+app = FastAPI(title="ShopSathi API", version="0.1.0", **_docs)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin],

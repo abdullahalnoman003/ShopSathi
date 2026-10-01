@@ -1,0 +1,37 @@
+# Reverse proxy with automatic HTTPS (Let's Encrypt certificates are requested and renewed by Caddy itself).
+# The two site addresses come from .env.prod: API_SITE=api.example.com  FRONTEND_SITE=app.example.com
+# (for a test on your own computer: API_SITE=api.localhost and FRONTEND_SITE=app.localhost with HTTPS_PORT=8443 in .env.prod; Caddy then makes its own local certificate.
+# The site address must NOT contain a port: inside the container Caddy always listens on 80 and 443.)
+{
+	email {$ACME_EMAIL}
+}
+
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
+{$API_SITE} {
+	import security_headers
+	encode zstd gzip
+	# Meta sends webhooks here: https://<API_SITE>/api/v1/webhooks/messenger
+	reverse_proxy api:8000 {
+		health_uri /api/v1/health
+		health_interval 10s
+		health_timeout 5s
+		# right after a restart of the api: wait a few seconds for it instead of answering 503 at once
+		lb_try_duration 15s
+		lb_try_interval 500ms
+	}
+}
+
+{$FRONTEND_SITE} {
+	import security_headers
+	encode zstd gzip
+	reverse_proxy frontend:3000
+}

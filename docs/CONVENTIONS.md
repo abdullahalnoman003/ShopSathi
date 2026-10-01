@@ -171,3 +171,9 @@ See the root `README.md`.
 - Behind an HTTPS reverse proxy set `TRUSTED_PROXIES` to the proxy's address (never `*` unless the backend is only reachable through it). Do not read `X-Forwarded-*` headers in application code: the middleware has already applied them.
 - `tests/security/test_role_matrix.py` classifies every endpoint (it fails for a new, unclassified one): add new endpoints to `allowed_roles`. Route lists must come from `app.openapi()`; `app.routes` does not list nested routers.
 - Load tests only ever talk to `scripts/loadtest/stub_send_api.py`; use `127.0.0.1`, not `localhost`, in local `FB_GRAPH_BASE_URL` on Windows.
+
+## Deployment (Prompt 23)
+- One backend image, three roles: `docker run shopsathi-backend api|worker|beat|migrate|cli ...` (`backend/docker-entrypoint.sh`). Build it from the repository root (`docker build -f backend/Dockerfile .`); it keeps the repository layout (`/srv/shopsathi/{backend,ai_engine,database/seed}`) because the code finds `database/seed` relative to `backend/app`. Only the api runs migrations; run exactly one beat.
+- Deployment files live in `deploy/`; secrets only in the hosting dashboard or the git-ignored `deploy/.env.prod`. The local development setup (`database/docker-compose.yml`) is separate. `NEXT_PUBLIC_*` variables are public and compiled into the frontend.
+- `/api/v1/health` answers 200 only when the database and Redis work, 503 otherwise: use it for every platform health check and uptime monitor. Behind HTTPS set `TRUSTED_PROXIES` and `APP_ENV=production`.
+- Documentation for people: `docs/DEPLOYMENT.md` (running it) and `docs/USER_GUIDE.md` (using it). When a seller-facing feature changes, update the user guide in the same change.

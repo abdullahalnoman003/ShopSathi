@@ -1,0 +1,153 @@
+# ShopSathi production stack on ONE small server (VPS): the components stay separate containers.
+#
+#   reverse proxy (Caddy, automatic HTTPS) -> frontend (Next.js)  and  api (FastAPI)
+#   worker (Celery, answers customers) and beat (Celery, weekly summary) -> PostgreSQL + pgvector, Redis
+#
+# Usage (from this folder):
+#   cp .env.prod.example .env.prod      # then fill it in (see docs/DEPLOYMENT.md)
+#   docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+#
+# Only the proxy publishes ports (80 and 443). The database, Redis, the API and the frontend are reachable on the
+# internal network only. The development setup in database/docker-compose.yml is separate and unchanged.
+name: shopsathi-prod
+
+x-backend: &backend
+  image: shopsathi-backend:${SHOPSATHI_VERSION:-latest}
+  build:
+    context: ..
+    dockerfile: backend/Dockerfile
+  env_file: [.env.prod]
+  environment: &backend-env
+    DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    REDIS_URL: redis://redis:6379/0
+    APP_ENV: production
+    MEDIA_ROOT: /data/media
+  restart: unless-stopped
+  networks: [internal]
+  logging:
+    driver: json-file
+    options: {max-size: "10m", max-file: "5"}
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env.prod}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.prod}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env.prod}
+    command: ["postgres", "-c", "max_connections=200"]   # the worker alone may hold about 60 connections
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../database/init/01-extensions.sql:/docker-entrypoint-initdb.d/01-extensions.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [internal]
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks: [internal]
+
+  # Runs the database migrations on every start, then serves the API.
+  api:
+    <<: *backend
+    command: ["api"]
+    environment:
+      <<: *backend-env
+      # the proxy is the only thing that can reach the API: believe its X-Forwarded-For / X-Forwarded-Proto headers
+      TRUSTED_PROXIES: "*"
+    volumes:
+      - media:/data/media
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=4).status == 200 else 1)"]
+      interval: 30s
+      timeout: 6s
+      retries: 3
+      start_period: 60s
+
+  worker:
+    <<: *backend
+    command: ["worker"]
+    environment:
+      <<: *backend-env
+      DB_POOL_SIZE: ${WORKER_CONCURRENCY:-50}
+      DB_MAX_OVERFLOW: 10
+    depends_on:
+      api: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.workers.celery_app inspect ping -d worker@$$(hostname) --timeout 8 >/dev/null 2>&1"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+
+  # The weekly AI summary schedule. Exactly ONE beat must run.
+  beat:
+    <<: *backend
+    command: ["beat"]
+    depends_on:
+      api: {condition: service_healthy}
+    healthcheck:   # the image's own check is for the API: here, "is the beat process alive?"
+      test: ["CMD", "python", "-c", "import os,sys; sys.exit(0 if any(b'celery' in c and b'beat' in c for c in (open('/proc/%s/cmdline' % p, 'rb').read() for p in os.listdir('/proc') if p.isdigit())) else 1)"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  frontend:
+    image: shopsathi-frontend:${SHOPSATHI_VERSION:-latest}
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        # the public address of the API; compiled into the pages, so a change needs a rebuild
+        NEXT_PUBLIC_API_BASE_URL: ${BACKEND_PUBLIC_URL:?set BACKEND_PUBLIC_URL in .env.prod}
+    restart: unless-stopped
+    networks: [internal]
+
+  proxy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    environment:
+      API_SITE: ${API_SITE:?set API_SITE in .env.prod}
+      FRONTEND_SITE: ${FRONTEND_SITE:?set FRONTEND_SITE in .env.prod}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env.prod}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data      # the certificates: keep this volume, or Let's Encrypt limits are hit
+      - caddy_config:/config
+    depends_on:
+      api: {condition: service_healthy}
+      frontend: {condition: service_healthy}
+    networks: [internal]
+
+networks:
+  internal:
+
+volumes:
+  pgdata:
+  redisdata:
+  media:
+  caddy_data:
+  caddy_config:

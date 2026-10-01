@@ -1,0 +1,102 @@
+# Render Blueprint for the BACKEND (New > Blueprint > pick this repository > file path: deploy/render.yaml).
+# The frontend goes to Vercel (docs/DEPLOYMENT.md). Render gives every web service HTTPS and a *.onrender.com address.
+#
+# What it creates: the API (web service, runs the migrations on start), the Celery worker, the Celery beat scheduler,
+# a managed PostgreSQL (pgvector is enabled by the migrations: CREATE EXTENSION vector) and a Redis-compatible Key Value store.
+# Values marked `sync: false` are asked for in the Render dashboard when the Blueprint is created: they are secrets or
+# depend on your own domains. Plans below are small demo sizes; the free Postgres expires after 30 days, so use a paid one
+# for a demo that must stay up (NFR-02).
+databases:
+  - name: shopsathi-db
+    databaseName: shopsathi
+    user: shopsathi
+    postgresMajorVersion: "16"
+    plan: basic-256mb
+
+services:
+  - type: keyvalue
+    name: shopsathi-redis
+    plan: starter
+    maxmemoryPolicy: noeviction   # a full Redis must refuse, not silently drop queued AI jobs
+    ipAllowList: []               # only services of this account (private network) can connect
+
+  - type: web
+    name: shopsathi-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /api/v1/health   # NFR-02: Render restarts the service when this stops answering 200
+    autoDeploy: true
+    envVars: &common
+      - {key: APP_ENV, value: production}
+      - {key: DATABASE_URL, fromDatabase: {name: shopsathi-db, property: connectionString}}
+      - {key: REDIS_URL, fromService: {type: keyvalue, name: shopsathi-redis, property: connectionString}}
+      - {key: JWT_SECRET, generateValue: true}
+      - {key: FB_TOKEN_ENCRYPTION_KEY, sync: false}   # a Fernet key; losing it makes stored Page tokens unreadable
+      - {key: FB_APP_ID, sync: false}
+      - {key: FB_APP_SECRET, sync: false}
+      - {key: FB_VERIFY_TOKEN, generateValue: true}   # copy it into the Meta webhook settings
+      - {key: FB_GRAPH_API_VERSION, value: v21.0}
+      - {key: FB_OAUTH_REDIRECT_URI, sync: false}     # https://<api-address>/api/v1/facebook/callback
+      - {key: FRONTEND_ORIGIN, sync: false}           # https://<your-vercel-domain>   (CORS: only this origin may call the API)
+      - {key: FRONTEND_URL, sync: false}              # the same address
+      - {key: BACKEND_PUBLIC_URL, sync: false}        # https://<api-address>   (product photo links)
+      - {key: LLM_PROVIDER, value: openai}
+      - {key: LLM_MODEL, value: gpt-4o-mini}
+      - {key: EMBEDDING_PROVIDER, value: openai}
+      - {key: EMBEDDING_MODEL, value: text-embedding-3-small}
+      - {key: EMBEDDING_DIM, value: "1536"}
+      - {key: OPENAI_API_KEY, sync: false}
+      - {key: SMTP_HOST, sync: false}
+      - {key: SMTP_PORT, value: "587"}
+      - {key: SMTP_USERNAME, sync: false}
+      - {key: SMTP_PASSWORD, sync: false}
+      - {key: SMTP_FROM, sync: false}
+      - {key: TRUSTED_PROXIES, value: "*"}            # the service is only reachable through Render's proxy
+      - {key: MEDIA_ROOT, value: /data/media}
+      - {key: DB_POOL_SIZE, value: "10"}
+    disk:                                              # product photos (a persistent disk needs a paid instance)
+      name: shopsathi-media
+      mountPath: /data/media
+      sizeGB: 2
+
+  - type: worker
+    name: shopsathi-worker
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: starter
+    dockerCommand: /srv/shopsathi/backend/docker-entrypoint.sh worker
+    envVars:
+      - {key: WORKER_CONCURRENCY, value: "20"}   # small instance; raise it with the plan size (50 was tested)
+      - {key: DB_POOL_SIZE, value: "20"}
+      - {key: DB_MAX_OVERFLOW, value: "10"}
+      - {key: APP_ENV, value: production}
+      - {key: DATABASE_URL, fromDatabase: {name: shopsathi-db, property: connectionString}}
+      - {key: REDIS_URL, fromService: {type: keyvalue, name: shopsathi-redis, property: connectionString}}
+      - {key: JWT_SECRET, fromService: {type: web, name: shopsathi-api, envVarKey: JWT_SECRET}}
+      - {key: FB_TOKEN_ENCRYPTION_KEY, sync: false}
+      - {key: FB_APP_ID, sync: false}
+      - {key: FB_APP_SECRET, sync: false}
+      - {key: FB_GRAPH_API_VERSION, value: v21.0}
+      - {key: LLM_PROVIDER, value: openai}
+      - {key: LLM_MODEL, value: gpt-4o-mini}
+      - {key: EMBEDDING_PROVIDER, value: openai}
+      - {key: EMBEDDING_MODEL, value: text-embedding-3-small}
+      - {key: EMBEDDING_DIM, value: "1536"}
+      - {key: OPENAI_API_KEY, sync: false}
+      - {key: BACKEND_PUBLIC_URL, sync: false}
+
+  - type: worker
+    name: shopsathi-beat            # the weekly AI summary schedule: exactly ONE instance
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: starter
+    dockerCommand: /srv/shopsathi/backend/docker-entrypoint.sh beat
+    envVars:
+      - {key: APP_ENV, value: production}
+      - {key: DATABASE_URL, fromDatabase: {name: shopsathi-db, property: connectionString}}
+      - {key: REDIS_URL, fromService: {type: keyvalue, name: shopsathi-redis, property: connectionString}}
+      - {key: JWT_SECRET, fromService: {type: web, name: shopsathi-api, envVarKey: JWT_SECRET}}

@@ -1,6 +1,10 @@
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+#: environments where API docs are shown and the e-mail dev log prints links; anything else is a real deployment
+LOCAL_ENVS = {"local", "dev", "development"}
 
 
 class Settings(BaseSettings):
@@ -99,6 +103,19 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_from: str = "ShopSathi <no-reply@shopsathi.local>"
     smtp_use_tls: bool = True
+
+    @field_validator("database_url", "test_database_url")
+    @classmethod
+    def _driver(cls, v: str) -> str:
+        """Managed databases (Render, Railway, Heroku style) hand out postgres:// or postgresql:// URLs: use psycopg 3."""
+        for prefix in ("postgres://", "postgresql://"):
+            if v.startswith(prefix):
+                return "postgresql+psycopg://" + v[len(prefix):]
+        return v
+
+    @property
+    def is_local(self) -> bool:
+        return self.app_env.lower() in LOCAL_ENVS
 
 
 @lru_cache
