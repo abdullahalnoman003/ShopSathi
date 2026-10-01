@@ -134,3 +134,8 @@ See the root `README.md`.
 - A Messenger AI reply is stored with `sent_at = NULL` and gets `sent_at` + usage count only after Facebook accepted it.
 - Per-message state lives in `messages.extras`: `ai_status` (pending/replied/skipped/failed), `ai_skip_reason`, `in_reply_to` (on the AI message), `delivery` (`status`, `facebook_message_id`, `timings_ms`).
 - Non-text customer messages are stored as a bracketed placeholder and handed over with `low_confidence`.
+
+## Inbox (Prompt 15)
+- `/api/v1/chats...` is owner + moderator, Messenger chats only (`channel='test'` is never listed and gives 404). Listing order: flagged first (oldest flag first), then latest activity.
+- The seller's manual reply (`sender='seller'`) is allowed only while `ai_paused`, always goes through `MessengerSender` (24-hour window) and is never passed to `UsageLimitService`. Pause, resume and resolve-flag are independent actions.
+- Shared message cards live in `frontend/src/components/ChatCards.tsx`.

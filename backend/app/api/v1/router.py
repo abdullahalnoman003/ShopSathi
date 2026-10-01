@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.routes import auth, facebook, health, notifications, plans, policy, products, shop, test_chat, webhooks
+from app.api.v1.routes import auth, chats, facebook, health, notifications, plans, policy, products, shop, test_chat, webhooks
 
 api_router = APIRouter()
 api_router.include_router(health.router)
@@ -12,4 +12,5 @@ api_router.include_router(policy.router)
 api_router.include_router(test_chat.router)
 api_router.include_router(notifications.router)
 api_router.include_router(facebook.router)
+api_router.include_router(chats.router)
 api_router.include_router(webhooks.router)
