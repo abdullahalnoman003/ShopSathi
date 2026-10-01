@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from shopsathi_ai.engine import ChatContext, ConversationEngine, EngineConfig, EngineResult
+from shopsathi_ai.language import detect_style, normalise_digits
 from shopsathi_ai.phrases import phrase
 from shopsathi_ai.understanding import Turn
 from sqlalchemy import select
@@ -157,14 +158,70 @@ class ConversationService:
 
     def handle_customer_message(self, chat: Chat, text: str) -> ConversationResult:
         """Store the customer's message, produce the AI reply, store it, and log the AI usage."""
-        db, shop_id = self.db, chat.shop_id
         recent = self.memory.load(chat)  # the turns BEFORE this message
-
         now = datetime.now(timezone.utc)
-        customer = Message(shop_id=shop_id, chat_id=chat.id, sender="customer", text=text, received_at=now)
-        db.add(customer)
+        customer = Message(shop_id=chat.shop_id, chat_id=chat.id, sender="customer", text=text, received_at=now)
+        self.db.add(customer)
         chat.last_customer_message_at = now
-        db.commit()  # the customer's message is kept even if something fails below
+        self.db.commit()  # the customer's message is kept even if something fails below
+        return self._reply(chat, customer, recent)
+
+    def reply_to_stored_message(self, chat: Chat, customer: Message) -> ConversationResult:
+        """Answer a customer message that is already stored (a Messenger webhook stores it on arrival), without
+        storing a second copy. Everything else is exactly what handle_customer_message does."""
+        recent = self.memory.load(chat, before_message_id=customer.id)
+        return self._reply(chat, customer, recent)
+
+    def hand_over_non_text(self, chat: Chat, customer: Message) -> ConversationResult:
+        """A photo, voice message, sticker or file arrived. The AI does not interpret those (out of scope): the
+        chat is handed to the shop (reason low_confidence, through the normal handover) with a short holding reply."""
+        db, shop_id = self.db, chat.shop_id
+        now = datetime.now(timezone.utc)
+        with get_redis().lock(f"chatlock:{shop_id}:{chat.id}", timeout=90, blocking_timeout=60):
+            db.refresh(chat)
+            shop = db.get(Shop, shop_id)
+            style = self._style_of_chat(chat, customer.id)
+            text = phrase("check_with_shop", style)
+            first = not chat.ai_disclosure_sent
+            if first:
+                text = f"{phrase('disclosure', style, shop_name=shop.name if shop else '')}\n\n{text}"
+                chat.ai_disclosure_sent = True
+            customer.extras = {**(customer.extras or {}), "entities": {}}
+            ai = Message(
+                shop_id=shop_id,
+                chat_id=chat.id,
+                sender="ai",
+                text=text,
+                language_style=style,
+                extras={
+                    "handover": {"needed": True, "reason": "low_confidence", "detail": "non_text_message"},
+                    "disclosure": first,
+                    "in_reply_to": customer.id,
+                },
+                sent_at=None if chat.channel == "messenger" else now,
+            )
+            db.add(ai)
+            self._flag_chat(chat, "low_confidence", now)
+            db.commit()
+            self.memory.append(chat, [Turn("customer", customer.text, {}), Turn("ai", text, {})])
+        return ConversationResult(customer, ai, None, None)
+
+    def _style_of_chat(self, chat: Chat, before_id: int) -> str:
+        """The writing style of the customer's latest text message (English if there is none)."""
+        rows = self.db.scalars(
+            scoped_select(Message, chat.shop_id)
+            .where(Message.chat_id == chat.id, Message.sender == "customer", Message.id < before_id)
+            .order_by(Message.id.desc())
+            .limit(5)
+        ).all()
+        for m in rows:
+            if not (m.extras or {}).get("non_text"):
+                return detect_style(normalise_digits(m.text))
+        return "english"
+
+    def _reply(self, chat: Chat, customer: Message, recent: list[Turn]) -> ConversationResult:
+        db, shop_id, text = self.db, chat.shop_id, customer.text
+        now = datetime.now(timezone.utc)
 
         # One message at a time per chat, so only one reply can be "the first" (disclosure) and an order
         # collection cannot be updated by two messages at once.
@@ -186,7 +243,7 @@ class ConversationService:
             customer.intent = result.intent
             customer.confidence = result.confidence
             customer.language_style = result.language_style
-            customer.extras = {"entities": entities}
+            customer.extras = {**(customer.extras or {}), "entities": entities}
 
             reply_text = result.reply_text
             extras: dict[str, Any] = {
@@ -194,6 +251,7 @@ class ConversationService:
                 "entities": entities,
                 "handover": {"needed": result.handover.needed, "reason": result.handover.reason, "detail": result.handover.detail},
                 "disclosure": result.disclosure_included,
+                "in_reply_to": customer.id,
             }
             order: Order | None = None
             ready = extras.pop("order_ready", None)  # the stored order replaces it
@@ -226,7 +284,8 @@ class ConversationService:
                 confidence=result.confidence,
                 language_style=result.language_style,
                 extras=extras,
-                sent_at=datetime.now(timezone.utc),
+                # a Messenger reply counts as sent only after Facebook accepted it (the worker sets sent_at)
+                sent_at=None if chat.channel == "messenger" else datetime.now(timezone.utc),
             )
             db.add(ai)
             if result.disclosure_included:

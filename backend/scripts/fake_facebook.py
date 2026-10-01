@@ -12,13 +12,14 @@ Behaviour switches (environment variables of this process):
     FAKE_FB_DENY=1                the "user" cancels the login
     FAKE_FB_MISSING_PERMISSION=1  the "user" declines pages_messaging
     FAKE_FB_NO_PAGES=1            the "user" manages no Page
-Inspect what the app subscribed to at GET /_debug/subscriptions.
+Inspect what the app subscribed to at GET /_debug/subscriptions and what it sent to customers at GET /_debug/messages.
+POST /_debug/fail-sends/N makes the next N Send API calls fail with a temporary error.
 """
 
 import os
 from urllib.parse import urlencode
 
-from fastapi import FastAPI, Form, Header, HTTPException, Query
+from fastapi import FastAPI, Form, Header, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 
 app = FastAPI(title="Fake Facebook (development only)")
@@ -28,6 +29,8 @@ PAGES = [
     {"id": "900002", "name": "Demo Gadget Page", "access_token": "FAKE-PAGE-TOKEN-gadget"},
 ]
 subscriptions: dict[str, str] = {}  # page id -> subscribed fields
+sent_messages: list[dict] = []  # what the app sent through the Send API (newest last)
+FAIL_SENDS = {"left": 0}  # POST /_debug/fail-sends/{n}: the next n sends fail with a temporary error
 
 
 def _error(message: str, code: int = 190, status: int = 400):
@@ -107,3 +110,47 @@ def unsubscribe(version: str, page_id: str, authorization: str | None = Header(d
 @app.get("/_debug/subscriptions")
 def debug_subscriptions():
     return subscriptions
+
+
+@app.get("/_debug/messages")
+def debug_messages():
+    return sent_messages
+
+
+@app.post("/_debug/fail-sends/{n}")
+def debug_fail_sends(n: int):
+    FAIL_SENDS["left"] = n
+    return FAIL_SENDS
+
+
+@app.post("/_debug/reset")
+def debug_reset():
+    sent_messages.clear()
+    FAIL_SENDS["left"] = 0
+    return {"ok": True}
+
+
+@app.post("/{version}/me/messages")
+async def send_api(version: str, request: Request, authorization: str | None = Header(default=None)):
+    """The Send API: accepts a message for a customer from a connected Page (identified by its Page token)."""
+    token = _bearer(authorization)
+    page = next((p for p in PAGES if p["access_token"] == token), None)
+    if page is None:
+        _error("Invalid OAuth access token.")
+    body = await request.json()
+    if FAIL_SENDS["left"] > 0:
+        FAIL_SENDS["left"] -= 1
+        _error("An unexpected error has occurred. Please retry your request later.", 2, 500)
+    if body.get("messaging_type") != "RESPONSE" or not body.get("recipient", {}).get("id") or not body.get("message"):
+        _error("(#100) Invalid parameter", 100)
+    sent_messages.append({"page_id": page["id"], "recipient": body["recipient"]["id"], "messaging_type": body["messaging_type"], "message": body["message"]})
+    return {"recipient_id": body["recipient"]["id"], "message_id": f"m_fake_{len(sent_messages)}"}
+
+
+@app.get("/{version}/{psid}")
+def user_profile(version: str, psid: str, fields: str = Query(default=""), authorization: str | None = Header(default=None)):
+    """A customer's profile (name) for a Page-scoped id."""
+    token = _bearer(authorization)
+    if not any(p["access_token"] == token for p in PAGES):
+        _error("Invalid OAuth access token.")
+    return {"id": psid, "first_name": "Test", "last_name": f"Customer {psid[-4:]}"}

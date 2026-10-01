@@ -46,6 +46,11 @@ class Settings(BaseSettings):
     fb_token_encryption_key: str = ""
     #: where the browser is sent after Facebook login; falls back to FRONTEND_ORIGIN when empty
     frontend_url: str = ""
+    #: the secret Meta sends back when it verifies the webhook URL (you choose it, in the Meta app and here)
+    fb_verify_token: str = ""
+    #: sending a reply: attempts for temporary errors, and the pause between them
+    fb_send_max_attempts: int = 3
+    fb_send_retry_delay_seconds: float = 0.5
     # Dev/test only: point at a local fake Facebook (backend/scripts/fake_facebook.py). Leave the defaults in production.
     fb_graph_base_url: str = "https://graph.facebook.com"
     fb_dialog_base_url: str = "https://www.facebook.com"

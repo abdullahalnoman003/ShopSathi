@@ -127,3 +127,10 @@ Roles live in `app/core/roles.py` (`OWNER`, `MODERATOR`, `PLATFORM_ADMIN`). Reus
 
 ## Running everything
 See the root `README.md`.
+
+## Messenger webhook & delivery (Prompt 14)
+- The webhook must verify `X-Hub-Signature-256` on the raw body before reading it, answer 200 quickly and do the AI work in the Celery task `process_incoming_message`.
+- Sending to a customer always goes through `MessengerSender` (24-hour window check built in, `messaging_type: RESPONSE`, retry only temporary errors, never log tokens or message text). Prompt 15 (seller replies) reuses it; no message outside the window is ever sent.
+- A Messenger AI reply is stored with `sent_at = NULL` and gets `sent_at` + usage count only after Facebook accepted it.
+- Per-message state lives in `messages.extras`: `ai_status` (pending/replied/skipped/failed), `ai_skip_reason`, `in_reply_to` (on the AI message), `delivery` (`status`, `facebook_message_id`, `timings_ms`).
+- Non-text customer messages are stored as a bracketed placeholder and handed over with `low_confidence`.

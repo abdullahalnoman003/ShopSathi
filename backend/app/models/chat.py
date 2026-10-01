@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Index, String, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, CheckConstraint, DateTime, Float, ForeignKey, Index, String, Text, UniqueConstraint, func, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -17,6 +17,14 @@ class Chat(Base):
     __table_args__ = (
         CheckConstraint("channel IN ('messenger', 'test')", name="ck_chats_channel"),
         Index("ix_chats_shop_channel_updated", "shop_id", "channel", "updated_at"),
+        # one Messenger chat per shop and customer (two racing webhook deliveries must not create two)
+        Index(
+            "uq_chats_shop_messenger_psid",
+            "shop_id",
+            "customer_psid",
+            unique=True,
+            postgresql_where=text("channel = 'messenger' AND customer_psid IS NOT NULL"),
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

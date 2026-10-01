@@ -20,6 +20,9 @@ os.environ.update(  # a fake Meta app: no test ever talks to Facebook
     FB_OAUTH_REDIRECT_URI="http://testserver/api/v1/facebook/callback",
     FB_TOKEN_ENCRYPTION_KEY=Fernet.generate_key().decode(),
     FRONTEND_URL="http://localhost:3000",
+    FB_VERIFY_TOKEN="verify-token-for-tests",
+    FB_SEND_MAX_ATTEMPTS="3",
+    FB_SEND_RETRY_DELAY_SECONDS="0",  # no real waiting between send attempts in tests
     FB_GRAPH_BASE_URL="https://graph.facebook.com",
     FB_DIALOG_BASE_URL="https://www.facebook.com",
 )

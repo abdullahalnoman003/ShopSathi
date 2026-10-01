@@ -1,5 +1,7 @@
 """Background jobs. Registered with the Celery app (see `include` in celery_app.py)."""
 
+import logging
+
 from shopsathi_ai.providers import EmbeddingProviderError
 from sqlalchemy import select
 
@@ -32,3 +34,22 @@ def delete_product_embeddings(product_id: int, shop_id: int) -> int:
 def embed_policy(shop_id: int) -> int:
     with SessionLocal() as db:
         return EmbeddingService(db).embed_policy(shop_id).chunks
+
+
+logger = logging.getLogger("shopsathi.tasks")
+
+
+@celery_app.task(name="shopsathi.process_incoming_message", bind=True, max_retries=5)
+def process_incoming_message(self, message_id: int) -> None:
+    """Answer a stored Messenger customer message (and any earlier ones of that chat still waiting), in order.
+
+    Never raises to the worker: a failure leaves the customer's message safely stored for the seller."""
+    from app.services.messenger_processor import ChatBusy, MessengerProcessor
+
+    try:
+        with SessionLocal() as db:
+            MessengerProcessor(db).process(message_id)
+    except ChatBusy as e:
+        raise self.retry(countdown=3, exc=e)  # another worker is on this chat: keep the order
+    except Exception as e:
+        logger.exception("process_incoming_message(%s) failed: %s", message_id, e.__class__.__name__)

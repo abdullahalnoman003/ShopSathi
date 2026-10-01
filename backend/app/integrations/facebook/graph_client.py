@@ -21,11 +21,14 @@ REQUIRED_PERMISSIONS = ("pages_show_list", "pages_messaging", "pages_manage_meta
 class GraphAPIError(Exception):
     """Facebook answered with an error (or could not be reached). ``message`` is safe to show to the owner."""
 
-    def __init__(self, message: str, code: int | None = None, status_code: int | None = None) -> None:
+    def __init__(
+        self, message: str, code: int | None = None, status_code: int | None = None, subcode: int | None = None
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.code = code
         self.status_code = status_code
+        self.subcode = subcode
 
 
 class GraphClient:
@@ -41,10 +44,10 @@ class GraphClient:
 
     # ------------------------------------------------------------------ plumbing
 
-    def _request(self, method: str, path: str, *, token: str | None = None, params: dict | None = None, data: dict | None = None) -> dict[str, Any]:
+    def _request(self, method: str, path: str, *, token: str | None = None, params: dict | None = None, data: dict | None = None, json: dict | None = None) -> dict[str, Any]:
         headers = {"Authorization": f"Bearer {token}"} if token else {}
         try:
-            res = self._client.request(method, f"{self.base}{path}", params=params, data=data, headers=headers)
+            res = self._client.request(method, f"{self.base}{path}", params=params, data=data, json=json, headers=headers)
         except httpx.HTTPError as e:
             raise GraphAPIError("Could not reach Facebook. Please try again.") from e
         try:
@@ -57,6 +60,7 @@ class GraphClient:
                 str(err.get("message") or f"Facebook returned an error ({res.status_code})"),
                 code=err.get("code"),
                 status_code=res.status_code,
+                subcode=err.get("error_subcode"),
             )
         return body
 
@@ -137,3 +141,21 @@ class GraphClient:
 
     def unsubscribe_page(self, page_id: str, page_token: str) -> None:
         self._request("DELETE", f"/{page_id}/subscribed_apps", token=page_token)
+
+    # ---------------------------------------------------------------- Messenger
+
+    def send_message(self, page_token: str, psid: str, message: dict[str, Any]) -> str | None:
+        """Send one message to a customer as a RESPONSE (inside Meta's 24-hour window). Returns Facebook's message id."""
+        body = self._request(
+            "POST",
+            "/me/messages",
+            token=page_token,
+            json={"recipient": {"id": psid}, "messaging_type": "RESPONSE", "message": message},
+        )
+        return body.get("message_id")
+
+    def customer_name(self, psid: str, page_token: str) -> str | None:
+        """The customer's name, if Facebook gives it with the permissions granted (else None)."""
+        body = self._request("GET", f"/{psid}", token=page_token, params={"fields": "first_name,last_name"})
+        name = " ".join(x for x in (body.get("first_name"), body.get("last_name")) if x)
+        return name or None
