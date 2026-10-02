@@ -27,6 +27,7 @@ celerybeat-schedule*
 
 # ignore forntend 
 frontend/
+evaluation/
 
 # Agent files
 AGENTS.md

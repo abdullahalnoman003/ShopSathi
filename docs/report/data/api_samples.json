@@ -1,0 +1,230 @@
+{
+ "login": [
+  200,
+  {
+   "user": {
+    "id": 3,
+    "email": "rina.demo@example.com",
+    "full_name": "Rina Akter",
+    "role": "owner",
+    "shop_id": 3,
+    "is_active": true
+   },
+   "shop": {
+    "id": 3,
+    "name": "Rina Fashion House (demo)",
+    "status": "active",
+    "created_at": "2026-10-01T11:57:58.217244Z"
+   },
+   "access_token": "<token>",
+   "token_type": "bearer"
+  }
+ ],
+ "me": [
+  200,
+  {
+   "user": {
+    "id": 3,
+    "email": "rina.demo@example.com",
+    "full_name": "Rina Akter",
+    "role": "owner",
+    "shop_id": 3,
+    "is_active": true
+   },
+   "shop": {
+    "id": 3,
+    "name": "Rina Fashion House (demo)",
+    "status": "active",
+    "created_at": "2026-10-01T11:57:58.217244Z"
+   }
+  }
+ ],
+ "plan": [
+  200,
+  {
+   "plan": {
+    "code": "free",
+    "name": "Free",
+    "monthly_message_limit": 100,
+    "monthly_price": 0
+   },
+   "usage": {
+    "period": "2026-10",
+    "used": 10,
+    "limit": 100,
+    "remaining": 90
+   }
+  }
+ ],
+ "products": [
+  200,
+  {
+   "items": [
+    {
+     "id": 16,
+     "name": "Premium Silk Panjabi",
+     "description": "Silk-blend panjabi with hand embroidery for weddings and Eid. Currently sold out.",
+     "price": 1390.0,
+     "sizes": [
+      "M",
+      "L",
+      "XL"
+     ],
+     "colours": [
+      "Navy"
+     ],
+     "stock_count": 0,
+     "photos": [],
+     "created_at": "2026-10-01T14:13:53.260291Z",
+     "updated_at": "2026-10-01T14:13:53.260291Z"
+    },
+    {
+     "id": 15,
+     "name": "Eid Special Panjabi",
+     "description": "Light embroidered panjabi for festive occasions such as Eid. Soft cotton blend.",
+     "price": 1450.0,
+     "sizes": [
+      "M",
+      "L",
+      "XL"
+     ],
+     "colours": [
+      "White",
+      "Cream"
+     ],
+     "stock_count": 8,
+     "photos": [
+      "http://localhost:8001/media/shops/3/products/483663fc0b0247ea876db854265a4431.png"
+     ],
+     "created_at": "2026-10-01T14:13:53.260291Z",
+     "updated_at": "2026-10-01T14:20:51.218923Z"
+    }
+   ],
+   "total": 7,
+   "page": 1,
+   "page_size": 2
+  }
+ ],
+ "orders": [
+  200,
+  {
+   "items": [
+    {
+     "id": 26,
+     "chat_id": 72,
+     "product_id": 3,
+     "product_name": "Nakshi Kantha Wall Hanging",
+     "size": null,
+     "colour": "Multicolour",
+     "quantity": 1,
+     "unit_price": 2200.0,
+     "total_price": 2200.0,
+     "customer_name": "Shohag Ali",
+     "customer_phone": "01700001007",
+     "customer_address": "Boro Bazar, Rajshahi",
+     "status": "confirmed",
+     "created_at": "2026-09-28T09:09:40Z",
+     "confirmed_at": "2026-09-29T05:09:40Z",
+     "cancelled_at": null,
+     "product_sizes": [],
+     "product_colours": [
+      "Multicolour"
+     ]
+    }
+   ],
+   "total": 7,
+   "page": 1,
+   "page_size": 1,
+   "counts": {
+    "draft": 2,
+    "confirmed": 7,
+    "cancelled": 2
+   }
+  }
+ ],
+ "report": [
+  200,
+  {
+   "from_date": "2026-09-26",
+   "to_date": "2026-10-02",
+   "messages_handled_by_ai": 12,
+   "chats_handed_to_humans": 2,
+   "orders_drafted": 3,
+   "orders_confirmed": 2
+  }
+ ],
+ "chats": [
+  200,
+  {
+   "items": [
+    {
+     "id": 16,
+     "customer_name": "Arif Hossain",
+     "customer_label": "Arif Hossain",
+     "last_message": "I'm sorry about that. I've passed your message to the shop, and someone from the",
+     "last_message_sender": "ai",
+     "is_flagged": true,
+     "flag_reason": "refund",
+     "flagged_at": "2026-10-01T13:30:36.869896Z",
+     "ai_paused": true,
+     "last_activity_at": "2026-10-01T15:05:36.867714Z",
+     "window_open": true,
+     "window_closes_at": "2026-10-02T13:30:36.869896Z"
+    }
+   ],
+   "total": 2,
+   "page": 1,
+   "page_size": 1,
+   "flagged_count": 2
+  }
+ ],
+ "wrong": [
+  401,
+  {
+   "detail": "Invalid email or password"
+  }
+ ],
+ "notif": [
+  200,
+  {
+   "unread_count": 1,
+   "items": [
+    {
+     "id": 1,
+     "type": "chat_flagged",
+     "chat_id": 15,
+     "reason": "complaint",
+     "customer_name": "Nasrin Sultana",
+     "created_at": "2026-10-01T14:53:36.869896Z",
+     "read_at": null
+    },
+    {
+     "id": 2,
+     "type": "chat_flagged",
+     "chat_id": 16,
+     "reason": "refund",
+     "customer_name": "Arif Hossain",
+     "created_at": "2026-10-01T13:30:36.869896Z",
+     "read_at": "2026-10-01T13:31:36.869896Z"
+    }
+   ]
+  }
+ ],
+ "health": [
+  200,
+  {
+   "status": "ok",
+   "api": "ok",
+   "database": "ok",
+   "redis": "ok"
+  }
+ ],
+ "export": [
+  200,
+  "﻿order_id,confirmed_at,customer_name,customer_phone,customer_address,product_name,size,colour,quantity,unit_price,total_price\r\n22,2026-08-21 13:08,Mahmuda Begum,01700001002,\"Flat 4B, Green Road, Dhaka\",Cotton Panjabi,XL,Navy,1,1850.00,1850.00\r\n27,2026-09-01 14:07,Zahid Hasan,01700001009,\"House 12, Road 5, Mirpur 10, Dhaka\",Homemade Mango Pickle (Achar) 500g,500g,,3,450.00,1350.00\r\n30,2026-09-21 21:08,Faisal Karim,01700001013,\"Agrabad, Chattogram\",Cotton Panjabi,L,Maroon,2,1850.00,3700.00\r\n23,2026-09-22 23:09,Sohel Rana,01700001003,\"Village Rampur, Savar, Dhaka\",Red Jamdani Saree,,Red,1,4800.00"
+ ],
+ "template": [
+  200,
+  "name,description,price,sizes,colours,stock,photos\nCotton Panjabi,Comfortable everyday panjabi,1850,M|L|XL,White|Navy,24,https://example.com/panjabi.jpg\n"
+ ]
+}

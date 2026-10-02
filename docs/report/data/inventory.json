@@ -1,0 +1,4306 @@
+{
+ "tables": {
+  "plans": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "code",
+     "type": "VARCHAR(20)",
+     "pk": false,
+     "nullable": false,
+     "unique": true,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "name",
+     "type": "VARCHAR(50)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "monthly_message_limit",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "monthly_price",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    }
+   ],
+   "constraints": [
+    [
+     "UNIQUE",
+     null,
+     "code"
+    ],
+    [
+     "CHECK",
+     "ck_plans_code",
+     "code IN ('free', 'basic', 'pro')"
+    ]
+   ],
+   "indexes": [],
+   "doc": ""
+  },
+  "shops": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "name",
+     "type": "VARCHAR(200)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "status",
+     "type": "VARCHAR(20)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "active"
+    },
+    {
+     "name": "plan_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "plans.id (NO ACTION)"
+     ],
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    }
+   ],
+   "constraints": [
+    [
+     "CHECK",
+     "ck_shops_status",
+     "status IN ('active', 'suspended')"
+    ]
+   ],
+   "indexes": [
+    [
+     "ix_shops_plan_id",
+     [
+      "plan_id"
+     ],
+     false
+    ]
+   ],
+   "doc": ""
+  },
+  "ai_usage_logs": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "operation",
+     "type": "VARCHAR(50)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "provider",
+     "type": "VARCHAR(30)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "model",
+     "type": "VARCHAR(100)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "input_tokens",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "output_tokens",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "estimated_cost",
+     "type": "NUMERIC(12, 6)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    }
+   ],
+   "constraints": [],
+   "indexes": [
+    [
+     "ix_ai_usage_logs_shop_created",
+     [
+      "shop_id",
+      "created_at"
+     ],
+     false
+    ]
+   ],
+   "doc": ""
+  },
+  "delivery_areas": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "area_name",
+     "type": "VARCHAR(100)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "charge",
+     "type": "NUMERIC(10, 2)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    }
+   ],
+   "constraints": [
+    [
+     "CHECK",
+     "ck_delivery_areas_charge_non_negative",
+     "charge >= 0"
+    ]
+   ],
+   "indexes": [
+    [
+     "ix_delivery_areas_shop_id",
+     [
+      "shop_id"
+     ],
+     false
+    ],
+    [
+     "uq_delivery_areas_shop_area",
+     [
+      "shop_id",
+      "lower"
+     ],
+     true
+    ]
+   ],
+   "doc": ""
+  },
+  "embedding_chunks": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "source_type",
+     "type": "VARCHAR(20)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "source_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "content",
+     "type": "TEXT",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "embedding",
+     "type": "VECTOR(1536)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "updated_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    }
+   ],
+   "constraints": [
+    [
+     "CHECK",
+     "ck_embedding_chunks_source_type",
+     "source_type IN ('product', 'policy')"
+    ]
+   ],
+   "indexes": [
+    [
+     "ix_embedding_chunks_shop_source",
+     [
+      "shop_id",
+      "source_type",
+      "source_id"
+     ],
+     false
+    ],
+    [
+     "ix_embedding_chunks_embedding_hnsw",
+     [
+      "embedding"
+     ],
+     false
+    ]
+   ],
+   "doc": ""
+  },
+  "facebook_pages": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": true,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "page_id",
+     "type": "VARCHAR(64)",
+     "pk": false,
+     "nullable": false,
+     "unique": true,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "page_name",
+     "type": "VARCHAR(200)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "encrypted_page_token",
+     "type": "TEXT",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "connected_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    }
+   ],
+   "constraints": [
+    [
+     "UNIQUE",
+     null,
+     "page_id"
+    ],
+    [
+     "UNIQUE",
+     null,
+     "shop_id"
+    ]
+   ],
+   "indexes": [],
+   "doc": ""
+  },
+  "products": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "name",
+     "type": "VARCHAR(200)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "description",
+     "type": "TEXT",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": ""
+    },
+    {
+     "name": "price",
+     "type": "NUMERIC(10, 2)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "sizes",
+     "type": "ARRAY",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "{}"
+    },
+    {
+     "name": "colours",
+     "type": "ARRAY",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "{}"
+    },
+    {
+     "name": "stock_count",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "0"
+    },
+    {
+     "name": "photos",
+     "type": "ARRAY",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "{}"
+    },
+    {
+     "name": "created_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    },
+    {
+     "name": "updated_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    }
+   ],
+   "constraints": [
+    [
+     "CHECK",
+     "ck_products_price_positive",
+     "price > 0"
+    ],
+    [
+     "CHECK",
+     "ck_products_stock_non_negative",
+     "stock_count >= 0"
+    ],
+    [
+     "CHECK",
+     "ck_products_max_photos",
+     "cardinality(photos) <= 5"
+    ]
+   ],
+   "indexes": [
+    [
+     "ix_products_shop_id",
+     [
+      "shop_id"
+     ],
+     false
+    ]
+   ],
+   "doc": ""
+  },
+  "shop_message_usage": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "period",
+     "type": "VARCHAR(7)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "ai_messages_count",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "0"
+    }
+   ],
+   "constraints": [
+    [
+     "UNIQUE",
+     "uq_shop_message_usage_shop_period",
+     "shop_id, period"
+    ]
+   ],
+   "indexes": [
+    [
+     "ix_shop_message_usage_shop_id",
+     [
+      "shop_id"
+     ],
+     false
+    ]
+   ],
+   "doc": ""
+  },
+  "shop_policies": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": true,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "delivery_time",
+     "type": "TEXT",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": ""
+    },
+    {
+     "name": "return_rules",
+     "type": "TEXT",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": ""
+    },
+    {
+     "name": "payment_options",
+     "type": "TEXT",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": ""
+    },
+    {
+     "name": "updated_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    }
+   ],
+   "constraints": [
+    [
+     "UNIQUE",
+     null,
+     "shop_id"
+    ]
+   ],
+   "indexes": [],
+   "doc": ""
+  },
+  "simulated_payments": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "plan_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "plans.id (NO ACTION)"
+     ],
+     "default": null
+    },
+    {
+     "name": "amount",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "status",
+     "type": "VARCHAR(30)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    }
+   ],
+   "constraints": [
+    [
+     "CHECK",
+     "ck_simulated_payments_status",
+     "status IN ('simulated_success')"
+    ]
+   ],
+   "indexes": [
+    [
+     "ix_simulated_payments_shop_id",
+     [
+      "shop_id"
+     ],
+     false
+    ]
+   ],
+   "doc": ""
+  },
+  "users": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "email",
+     "type": "VARCHAR(320)",
+     "pk": false,
+     "nullable": false,
+     "unique": true,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "password_hash",
+     "type": "VARCHAR(255)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "full_name",
+     "type": "VARCHAR(200)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "role",
+     "type": "VARCHAR(20)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "is_active",
+     "type": "BOOLEAN",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "true"
+    },
+    {
+     "name": "created_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    }
+   ],
+   "constraints": [
+    [
+     "CHECK",
+     "ck_users_shop_id_by_role",
+     "(role = 'platform_admin') = (shop_id IS NULL)"
+    ],
+    [
+     "CHECK",
+     "ck_users_role",
+     "role IN ('owner', 'moderator', 'platform_admin')"
+    ]
+   ],
+   "indexes": [
+    [
+     "ix_users_email",
+     [
+      "email"
+     ],
+     true
+    ],
+    [
+     "ix_users_shop_id",
+     [
+      "shop_id"
+     ],
+     false
+    ]
+   ],
+   "doc": ""
+  },
+  "weekly_insights": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "week_start",
+     "type": "DATE",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "top_questions",
+     "type": "JSONB",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "[]"
+    },
+    {
+     "name": "missing_products",
+     "type": "JSONB",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "[]"
+    },
+    {
+     "name": "created_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    }
+   ],
+   "constraints": [
+    [
+     "UNIQUE",
+     "uq_weekly_insights_shop_week",
+     "shop_id, week_start"
+    ]
+   ],
+   "indexes": [
+    [
+     "ix_weekly_insights_shop_id",
+     [
+      "shop_id"
+     ],
+     false
+    ]
+   ],
+   "doc": ""
+  },
+  "admin_actions": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "admin_user_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [
+      "users.id (SET NULL)"
+     ],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [
+      "shops.id (SET NULL)"
+     ],
+     "default": null
+    },
+    {
+     "name": "action",
+     "type": "VARCHAR(30)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "detail",
+     "type": "JSONB",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "{}"
+    },
+    {
+     "name": "created_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    }
+   ],
+   "constraints": [],
+   "indexes": [
+    [
+     "ix_admin_actions_created",
+     [
+      "created_at"
+     ],
+     false
+    ],
+    [
+     "ix_admin_actions_shop_id",
+     [
+      "shop_id"
+     ],
+     false
+    ]
+   ],
+   "doc": ""
+  },
+  "chats": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "channel",
+     "type": "VARCHAR(20)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "customer_psid",
+     "type": "VARCHAR(100)",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "customer_name",
+     "type": "VARCHAR(200)",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "created_by_user_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [
+      "users.id (SET NULL)"
+     ],
+     "default": null
+    },
+    {
+     "name": "ai_paused",
+     "type": "BOOLEAN",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "false"
+    },
+    {
+     "name": "is_flagged",
+     "type": "BOOLEAN",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "false"
+    },
+    {
+     "name": "flag_reason",
+     "type": "VARCHAR(200)",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "flagged_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "pending_order",
+     "type": "JSONB",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "ai_disclosure_sent",
+     "type": "BOOLEAN",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "false"
+    },
+    {
+     "name": "last_customer_message_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    },
+    {
+     "name": "updated_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    }
+   ],
+   "constraints": [
+    [
+     "CHECK",
+     "ck_chats_channel",
+     "channel IN ('messenger', 'test')"
+    ]
+   ],
+   "indexes": [
+    [
+     "ix_chats_shop_channel_updated",
+     [
+      "shop_id",
+      "channel",
+      "updated_at"
+     ],
+     false
+    ],
+    [
+     "uq_chats_shop_messenger_psid",
+     [
+      "shop_id",
+      "customer_psid"
+     ],
+     true
+    ]
+   ],
+   "doc": ""
+  },
+  "password_reset_tokens": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "user_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "users.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "token_hash",
+     "type": "VARCHAR(64)",
+     "pk": false,
+     "nullable": false,
+     "unique": true,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "expires_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "used_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    }
+   ],
+   "constraints": [
+    [
+     "UNIQUE",
+     null,
+     "token_hash"
+    ]
+   ],
+   "indexes": [
+    [
+     "ix_password_reset_tokens_user_id",
+     [
+      "user_id"
+     ],
+     false
+    ]
+   ],
+   "doc": ""
+  },
+  "handover_events": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "chat_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "chats.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "reason",
+     "type": "VARCHAR(30)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    }
+   ],
+   "constraints": [
+    [
+     "CHECK",
+     "ck_handover_events_reason",
+     "reason IN ('complaint', 'refund', 'abusive_language', 'low_confidence', 'off_topic', 'not_in_shop_data', 'human_requested')"
+    ]
+   ],
+   "indexes": [
+    [
+     "ix_handover_events_chat_id",
+     [
+      "chat_id"
+     ],
+     false
+    ],
+    [
+     "ix_handover_events_shop_created",
+     [
+      "shop_id",
+      "created_at"
+     ],
+     false
+    ]
+   ],
+   "doc": ""
+  },
+  "messages": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "chat_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "chats.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "sender",
+     "type": "VARCHAR(20)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "text",
+     "type": "TEXT",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "intent",
+     "type": "VARCHAR(30)",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "confidence",
+     "type": "FLOAT",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "language_style",
+     "type": "VARCHAR(20)",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "extras",
+     "type": "JSONB",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "{}"
+    },
+    {
+     "name": "external_message_id",
+     "type": "VARCHAR(200)",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "received_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "sent_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    }
+   ],
+   "constraints": [
+    [
+     "CHECK",
+     "ck_messages_sender",
+     "sender IN ('customer', 'ai', 'seller')"
+    ],
+    [
+     "UNIQUE",
+     "uq_messages_shop_external_id",
+     "shop_id, external_message_id"
+    ]
+   ],
+   "indexes": [
+    [
+     "ix_messages_shop_chat",
+     [
+      "shop_id",
+      "chat_id"
+     ],
+     false
+    ],
+    [
+     "ix_messages_chat_id",
+     [
+      "chat_id"
+     ],
+     false
+    ]
+   ],
+   "doc": ""
+  },
+  "notifications": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "type",
+     "type": "VARCHAR(30)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "chat_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "chats.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "reason",
+     "type": "VARCHAR(30)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    },
+    {
+     "name": "read_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    }
+   ],
+   "constraints": [
+    [
+     "CHECK",
+     "ck_notifications_type",
+     "type IN ('chat_flagged')"
+    ]
+   ],
+   "indexes": [
+    [
+     "ix_notifications_shop_read_created",
+     [
+      "shop_id",
+      "read_at",
+      "created_at"
+     ],
+     false
+    ]
+   ],
+   "doc": ""
+  },
+  "orders": {
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "pk": true,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "shop_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [
+      "shops.id (CASCADE)"
+     ],
+     "default": null
+    },
+    {
+     "name": "chat_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [
+      "chats.id (SET NULL)"
+     ],
+     "default": null
+    },
+    {
+     "name": "product_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [
+      "products.id (SET NULL)"
+     ],
+     "default": null
+    },
+    {
+     "name": "product_name",
+     "type": "VARCHAR(200)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "size",
+     "type": "VARCHAR(50)",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "colour",
+     "type": "VARCHAR(50)",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "quantity",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "unit_price",
+     "type": "NUMERIC(10, 2)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "customer_name",
+     "type": "VARCHAR(200)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "customer_phone",
+     "type": "VARCHAR(20)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "customer_address",
+     "type": "TEXT",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "status",
+     "type": "VARCHAR(20)",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "draft"
+    },
+    {
+     "name": "is_test",
+     "type": "BOOLEAN",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "false"
+    },
+    {
+     "name": "created_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    },
+    {
+     "name": "updated_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": false,
+     "unique": false,
+     "fk": [],
+     "default": "now()"
+    },
+    {
+     "name": "confirmed_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "cancelled_at",
+     "type": "DATETIME",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [],
+     "default": null
+    },
+    {
+     "name": "confirmed_by_user_id",
+     "type": "INTEGER",
+     "pk": false,
+     "nullable": true,
+     "unique": false,
+     "fk": [
+      "users.id (SET NULL)"
+     ],
+     "default": null
+    }
+   ],
+   "constraints": [
+    [
+     "CHECK",
+     "ck_orders_status",
+     "status IN ('draft', 'confirmed', 'cancelled')"
+    ],
+    [
+     "CHECK",
+     "ck_orders_quantity_positive",
+     "quantity > 0"
+    ]
+   ],
+   "indexes": [
+    [
+     "ix_orders_chat_id",
+     [
+      "chat_id"
+     ],
+     false
+    ],
+    [
+     "ix_orders_shop_status_created",
+     [
+      "shop_id",
+      "status",
+      "created_at"
+     ],
+     false
+    ]
+   ],
+   "doc": ""
+  }
+ },
+ "endpoints": [
+  {
+   "method": "GET",
+   "path": "/api/v1/health",
+   "summary": "Health",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": ""
+   },
+   "tag": "health"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auth/signup",
+   "summary": "Signup",
+   "params": [],
+   "body": [
+    "application/json",
+    "SignupRequest"
+   ],
+   "responses": {
+    "201": "AuthResponse",
+    "422": "HTTPValidationError"
+   },
+   "tag": "auth"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auth/login",
+   "summary": "Login",
+   "params": [],
+   "body": [
+    "application/json",
+    "LoginRequest"
+   ],
+   "responses": {
+    "200": "AuthResponse",
+    "422": "HTTPValidationError"
+   },
+   "tag": "auth"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auth/logout",
+   "summary": "Logout",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": "MessageResponse"
+   },
+   "tag": "auth"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/auth/me",
+   "summary": "Me",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": "MeResponse"
+   },
+   "tag": "auth"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auth/password-reset/request",
+   "summary": "Password Reset Request",
+   "params": [],
+   "body": [
+    "application/json",
+    "PasswordResetRequest"
+   ],
+   "responses": {
+    "200": "MessageResponse",
+    "422": "HTTPValidationError"
+   },
+   "tag": "auth"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/auth/password-reset/confirm",
+   "summary": "Password Reset Confirm",
+   "params": [],
+   "body": [
+    "application/json",
+    "PasswordResetConfirm"
+   ],
+   "responses": {
+    "200": "MessageResponse",
+    "422": "HTTPValidationError"
+   },
+   "tag": "auth"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/plans",
+   "summary": "Get Plans",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": ""
+   },
+   "tag": "plans"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/shop/plan",
+   "summary": "Get Shop Plan",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": "ShopPlanResponse"
+   },
+   "tag": "shop"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/shop/plan/change",
+   "summary": "Change Shop Plan",
+   "params": [],
+   "body": [
+    "application/json",
+    "PlanChangeRequest"
+   ],
+   "responses": {
+    "200": "ShopPlanResponse",
+    "422": "HTTPValidationError"
+   },
+   "tag": "shop"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/shop/staff",
+   "summary": "List Staff",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": ""
+   },
+   "tag": "shop"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/shop/staff",
+   "summary": "Add Staff",
+   "params": [],
+   "body": [
+    "application/json",
+    "StaffCreate"
+   ],
+   "responses": {
+    "201": "StaffOut",
+    "422": "HTTPValidationError"
+   },
+   "tag": "shop"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/shop",
+   "summary": "Delete Shop",
+   "params": [],
+   "body": [
+    "application/json",
+    "ShopDelete"
+   ],
+   "responses": {
+    "200": "MessageResponse",
+    "422": "HTTPValidationError"
+   },
+   "tag": "shop"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/products",
+   "summary": "List Products",
+   "params": [
+    "q (query)",
+    "page (query)",
+    "page_size (query)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "ProductPage",
+    "422": "HTTPValidationError"
+   },
+   "tag": "products"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/products",
+   "summary": "Create Product",
+   "params": [],
+   "body": [
+    "application/json",
+    "ProductIn"
+   ],
+   "responses": {
+    "201": "ProductOut",
+    "422": "HTTPValidationError"
+   },
+   "tag": "products"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/products/import/template",
+   "summary": "Import Template",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": ""
+   },
+   "tag": "products"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/products/import",
+   "summary": "Import Products",
+   "params": [],
+   "body": [
+    "multipart/form-data",
+    "Body_import_products_api_v1_products_import_post"
+   ],
+   "responses": {
+    "200": "ImportResult",
+    "422": "HTTPValidationError"
+   },
+   "tag": "products"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/products/{product_id}",
+   "summary": "Get Product",
+   "params": [
+    "product_id (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "ProductOut",
+    "422": "HTTPValidationError"
+   },
+   "tag": "products"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/products/{product_id}",
+   "summary": "Update Product",
+   "params": [
+    "product_id (path)"
+   ],
+   "body": [
+    "application/json",
+    "ProductIn"
+   ],
+   "responses": {
+    "200": "ProductOut",
+    "422": "HTTPValidationError"
+   },
+   "tag": "products"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/products/{product_id}",
+   "summary": "Delete Product",
+   "params": [
+    "product_id (path)"
+   ],
+   "body": null,
+   "responses": {
+    "204": "",
+    "422": "HTTPValidationError"
+   },
+   "tag": "products"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/products/{product_id}/photos",
+   "summary": "Upload Photos",
+   "params": [
+    "product_id (path)"
+   ],
+   "body": [
+    "multipart/form-data",
+    "Body_upload_photos_api_v1_products__product_id__photos_post"
+   ],
+   "responses": {
+    "200": "ProductOut",
+    "422": "HTTPValidationError"
+   },
+   "tag": "products"
+  },
+  {
+   "method": "DELETE",
+   "path": "/api/v1/products/{product_id}/photos/{index}",
+   "summary": "Remove Photo",
+   "params": [
+    "product_id (path)",
+    "index (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "ProductOut",
+    "422": "HTTPValidationError"
+   },
+   "tag": "products"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/shop/policy",
+   "summary": "Get Policy",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": "PolicyOut"
+   },
+   "tag": "policy"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/shop/policy",
+   "summary": "Save Policy",
+   "params": [],
+   "body": [
+    "application/json",
+    "PolicyIn"
+   ],
+   "responses": {
+    "200": "PolicyOut",
+    "422": "HTTPValidationError"
+   },
+   "tag": "policy"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/test-chat/sessions",
+   "summary": "List Sessions",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": ""
+   },
+   "tag": "test-chat"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/test-chat/sessions",
+   "summary": "Start Session",
+   "params": [],
+   "body": null,
+   "responses": {
+    "201": "SessionOut"
+   },
+   "tag": "test-chat"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/test-chat/sessions/{session_id}/messages",
+   "summary": "List Messages",
+   "params": [
+    "session_id (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "",
+    "422": "HTTPValidationError"
+   },
+   "tag": "test-chat"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/test-chat/sessions/{session_id}/messages",
+   "summary": "Send Message",
+   "params": [
+    "session_id (path)"
+   ],
+   "body": [
+    "application/json",
+    "MessageIn"
+   ],
+   "responses": {
+    "200": "SendMessageResponse",
+    "422": "HTTPValidationError"
+   },
+   "tag": "test-chat"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/notifications",
+   "summary": "List Notifications",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": "NotificationList"
+   },
+   "tag": "notifications"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/notifications/read-all",
+   "summary": "Mark All Read",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": "MarkedRead"
+   },
+   "tag": "notifications"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/notifications/{notification_id}/read",
+   "summary": "Mark Read",
+   "params": [
+    "notification_id (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "NotificationOut",
+    "422": "HTTPValidationError"
+   },
+   "tag": "notifications"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/facebook/connect-url",
+   "summary": "Connect Url",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": "ConnectUrlOut"
+   },
+   "tag": "facebook"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/facebook/pages/available",
+   "summary": "Available Pages",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": ""
+   },
+   "tag": "facebook"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/facebook/pages/connect",
+   "summary": "Connect Page",
+   "params": [],
+   "body": [
+    "application/json",
+    "ConnectPageIn"
+   ],
+   "responses": {
+    "200": "ConnectedPageOut",
+    "422": "HTTPValidationError"
+   },
+   "tag": "facebook"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/facebook/page",
+   "summary": "Page Status",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": "PageStatusOut"
+   },
+   "tag": "facebook"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/facebook/page/disconnect",
+   "summary": "Disconnect Page",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": "DisconnectOut"
+   },
+   "tag": "facebook"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/shops",
+   "summary": "List Shops",
+   "params": [
+    "q (query)",
+    "page (query)",
+    "page_size (query)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "AdminShopPage",
+    "422": "HTTPValidationError"
+   },
+   "tag": "admin"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/shops/{shop_id}",
+   "summary": "Get Shop",
+   "params": [
+    "shop_id (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "AdminShopDetail",
+    "422": "HTTPValidationError"
+   },
+   "tag": "admin"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/admin/shops/{shop_id}/suspend",
+   "summary": "Suspend Shop",
+   "params": [
+    "shop_id (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "AdminShopDetail",
+    "422": "HTTPValidationError"
+   },
+   "tag": "admin"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/admin/shops/{shop_id}/reactivate",
+   "summary": "Reactivate Shop",
+   "params": [
+    "shop_id (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "AdminShopDetail",
+    "422": "HTTPValidationError"
+   },
+   "tag": "admin"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/admin/shops/{shop_id}/plan",
+   "summary": "Change Plan",
+   "params": [
+    "shop_id (path)"
+   ],
+   "body": [
+    "application/json",
+    "PlanChange"
+   ],
+   "responses": {
+    "200": "AdminShopDetail",
+    "422": "HTTPValidationError"
+   },
+   "tag": "admin"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/plans",
+   "summary": "Get Plans",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": ""
+   },
+   "tag": "admin"
+  },
+  {
+   "method": "PUT",
+   "path": "/api/v1/admin/plans/{code}",
+   "summary": "Update Plan",
+   "params": [
+    "code (path)"
+   ],
+   "body": [
+    "application/json",
+    "PlanUpdate"
+   ],
+   "responses": {
+    "200": "AdminPlan",
+    "422": "HTTPValidationError"
+   },
+   "tag": "admin"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/ai-usage",
+   "summary": "Ai Usage",
+   "params": [
+    "from (query)",
+    "to (query)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "AiUsageReport",
+    "422": "HTTPValidationError"
+   },
+   "tag": "admin"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/admin/system-health",
+   "summary": "System Health",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": "SystemHealth"
+   },
+   "tag": "admin"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats",
+   "summary": "List Chats",
+   "params": [
+    "filter (query)",
+    "page (query)",
+    "page_size (query)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "InboxPage",
+    "422": "HTTPValidationError"
+   },
+   "tag": "chats"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/chats/{chat_id}",
+   "summary": "Get Chat",
+   "params": [
+    "chat_id (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "InboxChatDetail",
+    "422": "HTTPValidationError"
+   },
+   "tag": "chats"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{chat_id}/pause",
+   "summary": "Pause Ai",
+   "params": [
+    "chat_id (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "InboxChatDetail",
+    "422": "HTTPValidationError"
+   },
+   "tag": "chats"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{chat_id}/resume",
+   "summary": "Resume Ai",
+   "params": [
+    "chat_id (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "InboxChatDetail",
+    "422": "HTTPValidationError"
+   },
+   "tag": "chats"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{chat_id}/resolve-flag",
+   "summary": "Resolve Flag",
+   "params": [
+    "chat_id (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "InboxChatDetail",
+    "422": "HTTPValidationError"
+   },
+   "tag": "chats"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/chats/{chat_id}/reply",
+   "summary": "Reply",
+   "params": [
+    "chat_id (path)"
+   ],
+   "body": [
+    "application/json",
+    "ReplyIn"
+   ],
+   "responses": {
+    "201": "InboxMessage",
+    "422": "HTTPValidationError"
+   },
+   "tag": "chats"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orders",
+   "summary": "List Orders",
+   "params": [
+    "status (query)",
+    "page (query)",
+    "page_size (query)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "OrderPage",
+    "422": "HTTPValidationError"
+   },
+   "tag": "orders"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orders/export",
+   "summary": "Export Confirmed",
+   "params": [
+    "from (query)",
+    "to (query)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "",
+    "422": "HTTPValidationError"
+   },
+   "tag": "orders"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orders/product-options",
+   "summary": "Product Options",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": ""
+   },
+   "tag": "orders"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/orders/{order_id}",
+   "summary": "Get Order",
+   "params": [
+    "order_id (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "OrderOut",
+    "422": "HTTPValidationError"
+   },
+   "tag": "orders"
+  },
+  {
+   "method": "PATCH",
+   "path": "/api/v1/orders/{order_id}",
+   "summary": "Edit Order",
+   "params": [
+    "order_id (path)"
+   ],
+   "body": [
+    "application/json",
+    "OrderPatch"
+   ],
+   "responses": {
+    "200": "OrderOut",
+    "422": "HTTPValidationError"
+   },
+   "tag": "orders"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orders/{order_id}/confirm",
+   "summary": "Confirm Order",
+   "params": [
+    "order_id (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "OrderOut",
+    "422": "HTTPValidationError"
+   },
+   "tag": "orders"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/orders/{order_id}/cancel",
+   "summary": "Cancel Order",
+   "params": [
+    "order_id (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "OrderOut",
+    "422": "HTTPValidationError"
+   },
+   "tag": "orders"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/reports/summary",
+   "summary": "Summary",
+   "params": [
+    "from (query)",
+    "to (query)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "ReportSummary",
+    "422": "HTTPValidationError"
+   },
+   "tag": "reports"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/reports/weekly-insights",
+   "summary": "List Weekly Insights",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": ""
+   },
+   "tag": "reports"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/reports/weekly-insights/{week_start}",
+   "summary": "Get Weekly Insight",
+   "params": [
+    "week_start (path)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "WeeklyInsightOut",
+    "422": "HTTPValidationError"
+   },
+   "tag": "reports"
+  },
+  {
+   "method": "GET",
+   "path": "/api/v1/webhooks/messenger",
+   "summary": "Verify Webhook",
+   "params": [
+    "hub.mode (query)",
+    "hub.verify_token (query)",
+    "hub.challenge (query)"
+   ],
+   "body": null,
+   "responses": {
+    "200": "",
+    "422": "HTTPValidationError"
+   },
+   "tag": "webhooks"
+  },
+  {
+   "method": "POST",
+   "path": "/api/v1/webhooks/messenger",
+   "summary": "Receive Messenger",
+   "params": [],
+   "body": null,
+   "responses": {
+    "200": ""
+   },
+   "tag": "webhooks"
+  }
+ ],
+ "schemas": {
+  "AdminPlan": {
+   "props": {
+    "code": "string",
+    "name": "string",
+    "monthly_message_limit": "integer",
+    "monthly_price": "integer"
+   },
+   "required": [
+    "code",
+    "name",
+    "monthly_message_limit",
+    "monthly_price"
+   ]
+  },
+  "AdminPlanRef": {
+   "props": {
+    "code": "string",
+    "name": "string"
+   },
+   "required": [
+    "code",
+    "name"
+   ]
+  },
+  "AdminShop": {
+   "props": {
+    "id": "integer",
+    "name": "string",
+    "owner_email": "any",
+    "owner_name": "any",
+    "plan": "AdminPlanRef",
+    "status": "string",
+    "created_at": "string",
+    "connected_page_name": "any",
+    "ai_messages_used": "integer",
+    "ai_messages_limit": "integer",
+    "usage_period": "string"
+   },
+   "required": [
+    "id",
+    "name",
+    "owner_email",
+    "owner_name",
+    "plan",
+    "status",
+    "created_at",
+    "connected_page_name",
+    "ai_messages_used",
+    "ai_messages_limit",
+    "usage_period"
+   ]
+  },
+  "AdminShopDetail": {
+   "props": {
+    "id": "integer",
+    "name": "string",
+    "owner_email": "any",
+    "owner_name": "any",
+    "plan": "AdminPlanRef",
+    "status": "string",
+    "created_at": "string",
+    "connected_page_name": "any",
+    "ai_messages_used": "integer",
+    "ai_messages_limit": "integer",
+    "usage_period": "string",
+    "product_count": "integer",
+    "chat_count": "integer",
+    "order_count": "integer"
+   },
+   "required": [
+    "id",
+    "name",
+    "owner_email",
+    "owner_name",
+    "plan",
+    "status",
+    "created_at",
+    "connected_page_name",
+    "ai_messages_used",
+    "ai_messages_limit",
+    "usage_period",
+    "product_count",
+    "chat_count",
+    "order_count"
+   ]
+  },
+  "AdminShopPage": {
+   "props": {
+    "items": "array",
+    "total": "integer",
+    "page": "integer",
+    "page_size": "integer"
+   },
+   "required": [
+    "items",
+    "total",
+    "page",
+    "page_size"
+   ]
+  },
+  "AiUsageReport": {
+   "props": {
+    "from_date": "string",
+    "to_date": "string",
+    "shops": "array",
+    "total": "OperationUsage",
+    "by_operation": "object"
+   },
+   "required": [
+    "from_date",
+    "to_date",
+    "shops",
+    "total",
+    "by_operation"
+   ]
+  },
+  "AuthResponse": {
+   "props": {
+    "user": "UserOut",
+    "shop": "any",
+    "access_token": "string",
+    "token_type": "string"
+   },
+   "required": [
+    "user",
+    "shop",
+    "access_token"
+   ]
+  },
+  "AvailablePageOut": {
+   "props": {
+    "id": "string",
+    "name": "string",
+    "in_use": "boolean"
+   },
+   "required": [
+    "id",
+    "name",
+    "in_use"
+   ]
+  },
+  "Body_import_products_api_v1_products_import_post": {
+   "props": {
+    "file": "string"
+   },
+   "required": [
+    "file"
+   ]
+  },
+  "Body_upload_photos_api_v1_products__product_id__photos_post": {
+   "props": {
+    "files": "array"
+   },
+   "required": [
+    "files"
+   ]
+  },
+  "ChatStateOut": {
+   "props": {
+    "is_flagged": "boolean",
+    "flag_reason": "any",
+    "ai_paused": "boolean"
+   },
+   "required": [
+    "is_flagged",
+    "flag_reason",
+    "ai_paused"
+   ]
+  },
+  "ComponentHealth": {
+   "props": {
+    "status": "string",
+    "detail": "any"
+   },
+   "required": [
+    "status"
+   ]
+  },
+  "ConnectPageIn": {
+   "props": {
+    "page_id": "string"
+   },
+   "required": [
+    "page_id"
+   ]
+  },
+  "ConnectUrlOut": {
+   "props": {
+    "url": "string"
+   },
+   "required": [
+    "url"
+   ]
+  },
+  "ConnectedPageOut": {
+   "props": {
+    "id": "string",
+    "name": "string",
+    "connected_at": "string"
+   },
+   "required": [
+    "id",
+    "name",
+    "connected_at"
+   ]
+  },
+  "DeliveryAreaIn": {
+   "props": {
+    "area_name": "string",
+    "charge": "any"
+   },
+   "required": [
+    "area_name",
+    "charge"
+   ]
+  },
+  "DeliveryAreaOut": {
+   "props": {
+    "area_name": "string",
+    "charge": "number"
+   },
+   "required": [
+    "area_name",
+    "charge"
+   ]
+  },
+  "DisconnectOut": {
+   "props": {
+    "disconnected": "boolean"
+   },
+   "required": [
+    "disconnected"
+   ]
+  },
+  "HTTPValidationError": {
+   "props": {
+    "detail": "array"
+   },
+   "required": []
+  },
+  "HandoverOut": {
+   "props": {
+    "needed": "boolean",
+    "reason": "any"
+   },
+   "required": [
+    "needed",
+    "reason"
+   ]
+  },
+  "ImportFailure": {
+   "props": {
+    "row": "integer",
+    "name": "string",
+    "reasons": "array"
+   },
+   "required": [
+    "row",
+    "name",
+    "reasons"
+   ]
+  },
+  "ImportResult": {
+   "props": {
+    "rows_read": "integer",
+    "imported": "integer",
+    "failed": "integer",
+    "failures": "array"
+   },
+   "required": [
+    "rows_read",
+    "imported",
+    "failed",
+    "failures"
+   ]
+  },
+  "InboxChat": {
+   "props": {
+    "id": "integer",
+    "customer_name": "any",
+    "customer_label": "string",
+    "last_message": "any",
+    "last_message_sender": "any",
+    "is_flagged": "boolean",
+    "flag_reason": "any",
+    "flagged_at": "any",
+    "ai_paused": "boolean",
+    "last_activity_at": "string",
+    "window_open": "boolean",
+    "window_closes_at": "any"
+   },
+   "required": [
+    "id",
+    "customer_name",
+    "customer_label",
+    "last_message",
+    "last_message_sender",
+    "is_flagged",
+    "flag_reason",
+    "flagged_at",
+    "ai_paused",
+    "last_activity_at",
+    "window_open",
+    "window_closes_at"
+   ]
+  },
+  "InboxChatDetail": {
+   "props": {
+    "id": "integer",
+    "customer_name": "any",
+    "customer_label": "string",
+    "last_message": "any",
+    "last_message_sender": "any",
+    "is_flagged": "boolean",
+    "flag_reason": "any",
+    "flagged_at": "any",
+    "ai_paused": "boolean",
+    "last_activity_at": "string",
+    "window_open": "boolean",
+    "window_closes_at": "any",
+    "messages": "array"
+   },
+   "required": [
+    "id",
+    "customer_name",
+    "customer_label",
+    "last_message",
+    "last_message_sender",
+    "is_flagged",
+    "flag_reason",
+    "flagged_at",
+    "ai_paused",
+    "last_activity_at",
+    "window_open",
+    "window_closes_at",
+    "messages"
+   ]
+  },
+  "InboxMessage": {
+   "props": {
+    "id": "integer",
+    "sender": "string",
+    "text": "string",
+    "intent": "any",
+    "confidence": "any",
+    "language_style": "any",
+    "extras": "object",
+    "created_at": "string",
+    "sent_at": "any"
+   },
+   "required": [
+    "id",
+    "sender",
+    "text",
+    "intent",
+    "confidence",
+    "language_style",
+    "extras",
+    "created_at",
+    "sent_at"
+   ]
+  },
+  "InboxPage": {
+   "props": {
+    "items": "array",
+    "total": "integer",
+    "page": "integer",
+    "page_size": "integer",
+    "flagged_count": "integer"
+   },
+   "required": [
+    "items",
+    "total",
+    "page",
+    "page_size",
+    "flagged_count"
+   ]
+  },
+  "InsightProduct": {
+   "props": {
+    "name": "string",
+    "count": "integer"
+   },
+   "required": [
+    "name",
+    "count"
+   ]
+  },
+  "InsightQuestion": {
+   "props": {
+    "question": "string",
+    "count": "integer"
+   },
+   "required": [
+    "question",
+    "count"
+   ]
+  },
+  "LoginRequest": {
+   "props": {
+    "email": "string",
+    "password": "string"
+   },
+   "required": [
+    "email",
+    "password"
+   ]
+  },
+  "MarkedRead": {
+   "props": {
+    "marked": "integer"
+   },
+   "required": [
+    "marked"
+   ]
+  },
+  "MeResponse": {
+   "props": {
+    "user": "UserOut",
+    "shop": "any"
+   },
+   "required": [
+    "user",
+    "shop"
+   ]
+  },
+  "MessageIn": {
+   "props": {
+    "text": "string"
+   },
+   "required": [
+    "text"
+   ]
+  },
+  "MessageOut": {
+   "props": {
+    "id": "integer",
+    "sender": "string",
+    "text": "string",
+    "intent": "any",
+    "confidence": "any",
+    "language_style": "any",
+    "extras": "object",
+    "created_at": "string"
+   },
+   "required": [
+    "id",
+    "sender",
+    "text",
+    "intent",
+    "confidence",
+    "language_style",
+    "extras",
+    "created_at"
+   ]
+  },
+  "MessageResponse": {
+   "props": {
+    "message": "string"
+   },
+   "required": [
+    "message"
+   ]
+  },
+  "NotificationList": {
+   "props": {
+    "unread_count": "integer",
+    "items": "array"
+   },
+   "required": [
+    "unread_count",
+    "items"
+   ]
+  },
+  "NotificationOut": {
+   "props": {
+    "id": "integer",
+    "type": "string",
+    "chat_id": "integer",
+    "reason": "string",
+    "customer_name": "any",
+    "created_at": "string",
+    "read_at": "any"
+   },
+   "required": [
+    "id",
+    "type",
+    "chat_id",
+    "reason",
+    "customer_name",
+    "created_at",
+    "read_at"
+   ]
+  },
+  "OperationUsage": {
+   "props": {
+    "calls": "integer",
+    "input_tokens": "integer",
+    "output_tokens": "integer",
+    "estimated_cost": "number"
+   },
+   "required": [
+    "calls",
+    "input_tokens",
+    "output_tokens",
+    "estimated_cost"
+   ]
+  },
+  "OrderOut": {
+   "props": {
+    "id": "integer",
+    "chat_id": "any",
+    "product_id": "any",
+    "product_name": "string",
+    "size": "any",
+    "colour": "any",
+    "quantity": "integer",
+    "unit_price": "number",
+    "total_price": "number",
+    "customer_name": "string",
+    "customer_phone": "string",
+    "customer_address": "string",
+    "status": "string",
+    "created_at": "string",
+    "confirmed_at": "any",
+    "cancelled_at": "any",
+    "product_sizes": "any",
+    "product_colours": "any"
+   },
+   "required": [
+    "id",
+    "chat_id",
+    "product_id",
+    "product_name",
+    "size",
+    "colour",
+    "quantity",
+    "unit_price",
+    "total_price",
+    "customer_name",
+    "customer_phone",
+    "customer_address",
+    "status",
+    "created_at",
+    "confirmed_at",
+    "cancelled_at"
+   ]
+  },
+  "OrderPage": {
+   "props": {
+    "items": "array",
+    "total": "integer",
+    "page": "integer",
+    "page_size": "integer",
+    "counts": "object"
+   },
+   "required": [
+    "items",
+    "total",
+    "page",
+    "page_size",
+    "counts"
+   ]
+  },
+  "OrderPatch": {
+   "props": {
+    "product_id": "any",
+    "size": "any",
+    "colour": "any",
+    "quantity": "any",
+    "customer_name": "any",
+    "customer_phone": "any",
+    "customer_address": "any"
+   },
+   "required": []
+  },
+  "PageStatusOut": {
+   "props": {
+    "connected": "boolean",
+    "page": "any"
+   },
+   "required": [
+    "connected"
+   ]
+  },
+  "PasswordResetConfirm": {
+   "props": {
+    "token": "string",
+    "new_password": "string"
+   },
+   "required": [
+    "token",
+    "new_password"
+   ]
+  },
+  "PasswordResetRequest": {
+   "props": {
+    "email": "string"
+   },
+   "required": [
+    "email"
+   ]
+  },
+  "PlanChange": {
+   "props": {
+    "plan_code": "string"
+   },
+   "required": [
+    "plan_code"
+   ]
+  },
+  "PlanChangeRequest": {
+   "props": {
+    "plan_code": "string",
+    "simulated_payment_confirmed": "boolean"
+   },
+   "required": [
+    "plan_code"
+   ]
+  },
+  "PlanOut": {
+   "props": {
+    "code": "string",
+    "name": "string",
+    "monthly_message_limit": "integer",
+    "monthly_price": "integer"
+   },
+   "required": [
+    "code",
+    "name",
+    "monthly_message_limit",
+    "monthly_price"
+   ]
+  },
+  "PlanUpdate": {
+   "props": {
+    "monthly_message_limit": "integer",
+    "monthly_price": "integer"
+   },
+   "required": [
+    "monthly_message_limit",
+    "monthly_price"
+   ]
+  },
+  "PolicyIn": {
+   "props": {
+    "delivery_time": "string",
+    "return_rules": "string",
+    "payment_options": "string",
+    "delivery_areas": "array"
+   },
+   "required": []
+  },
+  "PolicyOut": {
+   "props": {
+    "delivery_time": "string",
+    "return_rules": "string",
+    "payment_options": "string",
+    "delivery_areas": "array",
+    "updated_at": "any"
+   },
+   "required": [
+    "delivery_time",
+    "return_rules",
+    "payment_options",
+    "delivery_areas",
+    "updated_at"
+   ]
+  },
+  "ProductIn": {
+   "props": {
+    "name": "string",
+    "description": "string",
+    "price": "any",
+    "sizes": "array",
+    "colours": "array",
+    "stock_count": "integer"
+   },
+   "required": [
+    "name",
+    "price"
+   ]
+  },
+  "ProductOption": {
+   "props": {
+    "id": "integer",
+    "name": "string",
+    "price": "number",
+    "sizes": "array",
+    "colours": "array",
+    "stock_count": "integer"
+   },
+   "required": [
+    "id",
+    "name",
+    "price",
+    "sizes",
+    "colours",
+    "stock_count"
+   ]
+  },
+  "ProductOut": {
+   "props": {
+    "id": "integer",
+    "name": "string",
+    "description": "string",
+    "price": "number",
+    "sizes": "array",
+    "colours": "array",
+    "stock_count": "integer",
+    "photos": "array",
+    "created_at": "string",
+    "updated_at": "string"
+   },
+   "required": [
+    "id",
+    "name",
+    "description",
+    "price",
+    "sizes",
+    "colours",
+    "stock_count",
+    "photos",
+    "created_at",
+    "updated_at"
+   ]
+  },
+  "ProductPage": {
+   "props": {
+    "items": "array",
+    "total": "integer",
+    "page": "integer",
+    "page_size": "integer"
+   },
+   "required": [
+    "items",
+    "total",
+    "page",
+    "page_size"
+   ]
+  },
+  "ReplyIn": {
+   "props": {
+    "text": "string"
+   },
+   "required": [
+    "text"
+   ]
+  },
+  "ReportSummary": {
+   "props": {
+    "from_date": "string",
+    "to_date": "string",
+    "messages_handled_by_ai": "integer",
+    "chats_handed_to_humans": "integer",
+    "orders_drafted": "integer",
+    "orders_confirmed": "integer"
+   },
+   "required": [
+    "from_date",
+    "to_date",
+    "messages_handled_by_ai",
+    "chats_handed_to_humans",
+    "orders_drafted",
+    "orders_confirmed"
+   ]
+  },
+  "SendMessageResponse": {
+   "props": {
+    "customer_message": "MessageOut",
+    "ai_message": "any",
+    "handover": "HandoverOut",
+    "chat": "ChatStateOut"
+   },
+   "required": [
+    "customer_message",
+    "ai_message",
+    "handover",
+    "chat"
+   ]
+  },
+  "SessionOut": {
+   "props": {
+    "id": "integer",
+    "created_at": "string",
+    "updated_at": "string",
+    "message_count": "integer",
+    "last_message": "any",
+    "is_flagged": "boolean",
+    "flag_reason": "any",
+    "ai_paused": "boolean"
+   },
+   "required": [
+    "id",
+    "created_at",
+    "updated_at",
+    "message_count",
+    "last_message"
+   ]
+  },
+  "ShopAiUsage": {
+   "props": {
+    "shop_id": "integer",
+    "shop_name": "string",
+    "calls": "integer",
+    "input_tokens": "integer",
+    "output_tokens": "integer",
+    "estimated_cost": "number",
+    "by_operation": "object"
+   },
+   "required": [
+    "shop_id",
+    "shop_name",
+    "calls",
+    "input_tokens",
+    "output_tokens",
+    "estimated_cost",
+    "by_operation"
+   ]
+  },
+  "ShopDelete": {
+   "props": {
+    "password": "string",
+    "shop_name": "string"
+   },
+   "required": [
+    "password",
+    "shop_name"
+   ]
+  },
+  "ShopOut": {
+   "props": {
+    "id": "integer",
+    "name": "string",
+    "status": "string",
+    "created_at": "string"
+   },
+   "required": [
+    "id",
+    "name",
+    "status",
+    "created_at"
+   ]
+  },
+  "ShopPlanResponse": {
+   "props": {
+    "plan": "PlanOut",
+    "usage": "UsageOut"
+   },
+   "required": [
+    "plan",
+    "usage"
+   ]
+  },
+  "SignupRequest": {
+   "props": {
+    "shop_name": "string",
+    "owner_name": "string",
+    "email": "string",
+    "password": "string",
+    "plan_code": "string",
+    "simulated_payment_confirmed": "boolean"
+   },
+   "required": [
+    "shop_name",
+    "owner_name",
+    "email",
+    "password"
+   ]
+  },
+  "StaffCreate": {
+   "props": {
+    "email": "string",
+    "full_name": "string",
+    "password": "string"
+   },
+   "required": [
+    "email",
+    "full_name",
+    "password"
+   ]
+  },
+  "StaffOut": {
+   "props": {
+    "id": "integer",
+    "email": "string",
+    "full_name": "string",
+    "role": "string",
+    "is_active": "boolean",
+    "created_at": "string"
+   },
+   "required": [
+    "id",
+    "email",
+    "full_name",
+    "role",
+    "is_active",
+    "created_at"
+   ]
+  },
+  "SystemHealth": {
+   "props": {
+    "status": "string",
+    "api": "ComponentHealth",
+    "database": "ComponentHealth",
+    "redis": "ComponentHealth",
+    "celery_worker": "ComponentHealth",
+    "celery_queue_length": "any"
+   },
+   "required": [
+    "status",
+    "api",
+    "database",
+    "redis",
+    "celery_worker",
+    "celery_queue_length"
+   ]
+  },
+  "UsageOut": {
+   "props": {
+    "period": "string",
+    "used": "integer",
+    "limit": "integer",
+    "remaining": "integer"
+   },
+   "required": [
+    "period",
+    "used",
+    "limit",
+    "remaining"
+   ]
+  },
+  "UserOut": {
+   "props": {
+    "id": "integer",
+    "email": "string",
+    "full_name": "string",
+    "role": "string",
+    "shop_id": "any",
+    "is_active": "boolean"
+   },
+   "required": [
+    "id",
+    "email",
+    "full_name",
+    "role",
+    "shop_id",
+    "is_active"
+   ]
+  },
+  "ValidationError": {
+   "props": {
+    "loc": "array",
+    "msg": "string",
+    "type": "string",
+    "input": "any",
+    "ctx": "object"
+   },
+   "required": [
+    "loc",
+    "msg",
+    "type"
+   ]
+  },
+  "WeeklyInsightOut": {
+   "props": {
+    "week_start": "string",
+    "week_end": "string",
+    "generated_at": "string",
+    "top_questions": "array",
+    "missing_products": "array"
+   },
+   "required": [
+    "week_start",
+    "week_end",
+    "generated_at",
+    "top_questions",
+    "missing_products"
+   ]
+  },
+  "WeeklyInsightWeek": {
+   "props": {
+    "week_start": "string",
+    "week_end": "string",
+    "generated_at": "string"
+   },
+   "required": [
+    "week_start",
+    "week_end",
+    "generated_at"
+   ]
+  }
+ },
+ "files": {
+  "routes": [
+   "backend/app/api/v1/routes/__init__.py",
+   "backend/app/api/v1/routes/admin.py",
+   "backend/app/api/v1/routes/auth.py",
+   "backend/app/api/v1/routes/chats.py",
+   "backend/app/api/v1/routes/facebook.py",
+   "backend/app/api/v1/routes/health.py",
+   "backend/app/api/v1/routes/notifications.py",
+   "backend/app/api/v1/routes/orders.py",
+   "backend/app/api/v1/routes/plans.py",
+   "backend/app/api/v1/routes/policy.py",
+   "backend/app/api/v1/routes/products.py",
+   "backend/app/api/v1/routes/reports.py",
+   "backend/app/api/v1/routes/shop.py",
+   "backend/app/api/v1/routes/test_chat.py",
+   "backend/app/api/v1/routes/webhooks.py"
+  ],
+  "services": [
+   "backend/app/services/__init__.py",
+   "backend/app/services/ai_usage.py",
+   "backend/app/services/chat_memory.py",
+   "backend/app/services/conversation.py",
+   "backend/app/services/email.py",
+   "backend/app/services/embeddings.py",
+   "backend/app/services/facebook.py",
+   "backend/app/services/insights.py",
+   "backend/app/services/messenger_ingest.py",
+   "backend/app/services/messenger_processor.py",
+   "backend/app/services/plans.py",
+   "backend/app/services/policy.py",
+   "backend/app/services/policy_text.py",
+   "backend/app/services/product_import.py",
+   "backend/app/services/products.py",
+   "backend/app/services/shop_deletion.py",
+   "backend/app/services/storage.py",
+   "backend/app/services/tenant.py",
+   "backend/app/services/usage.py"
+  ],
+  "models": [
+   "backend/app/models/__init__.py",
+   "backend/app/models/admin_action.py",
+   "backend/app/models/chat.py",
+   "backend/app/models/embedding.py",
+   "backend/app/models/facebook.py",
+   "backend/app/models/handover.py",
+   "backend/app/models/order.py",
+   "backend/app/models/password_reset_token.py",
+   "backend/app/models/plan.py",
+   "backend/app/models/policy.py",
+   "backend/app/models/product.py",
+   "backend/app/models/shop.py",
+   "backend/app/models/user.py",
+   "backend/app/models/weekly_insight.py"
+  ],
+  "schemas": [
+   "backend/app/schemas/__init__.py",
+   "backend/app/schemas/admin.py",
+   "backend/app/schemas/auth.py",
+   "backend/app/schemas/facebook.py",
+   "backend/app/schemas/inbox.py",
+   "backend/app/schemas/notifications.py",
+   "backend/app/schemas/orders.py",
+   "backend/app/schemas/plans.py",
+   "backend/app/schemas/policy.py",
+   "backend/app/schemas/products.py",
+   "backend/app/schemas/reports.py",
+   "backend/app/schemas/staff.py",
+   "backend/app/schemas/test_chat.py"
+  ],
+  "core": [
+   "backend/app/core/__init__.py",
+   "backend/app/core/config.py",
+   "backend/app/core/crypto.py",
+   "backend/app/core/database.py",
+   "backend/app/core/log_masking.py",
+   "backend/app/core/rate_limit.py",
+   "backend/app/core/redis.py",
+   "backend/app/core/roles.py",
+   "backend/app/core/security.py"
+  ],
+  "integrations": [
+   "backend/app/integrations/__init__.py",
+   "backend/app/integrations/facebook/__init__.py",
+   "backend/app/integrations/facebook/graph_client.py",
+   "backend/app/integrations/facebook/messenger_sender.py",
+   "backend/app/integrations/facebook/webhook.py"
+  ],
+  "workers": [
+   "backend/app/workers/__init__.py",
+   "backend/app/workers/celery_app.py",
+   "backend/app/workers/dispatch.py",
+   "backend/app/workers/tasks.py"
+  ],
+  "adapters": [
+   "backend/app/ai_adapters/__init__.py",
+   "backend/app/ai_adapters/factory.py",
+   "backend/app/ai_adapters/gateway.py"
+  ],
+  "migrations": [
+   "backend/alembic/versions/0001_initial.py",
+   "backend/alembic/versions/0002_shops_users_password_reset_tokens.py",
+   "backend/alembic/versions/0003_plans_and_usage.py",
+   "backend/alembic/versions/0004_products.py",
+   "backend/alembic/versions/0005_shop_policy.py",
+   "backend/alembic/versions/0006_embeddings_and_ai_usage.py",
+   "backend/alembic/versions/0007_chats_and_messages.py",
+   "backend/alembic/versions/0008_orders_and_pending_order.py",
+   "backend/alembic/versions/0009_handover_events_and_notifications.py",
+   "backend/alembic/versions/0010_facebook_pages.py",
+   "backend/alembic/versions/0011_unique_messenger_chat.py",
+   "backend/alembic/versions/0012_weekly_insights.py",
+   "backend/alembic/versions/0013_admin_actions.py"
+  ],
+  "scripts": [
+   "backend/scripts/check_chat_examples.py",
+   "backend/scripts/check_embedding_latency.py",
+   "backend/scripts/check_semantic_search.py",
+   "backend/scripts/debug_chat.py",
+   "backend/scripts/fake_facebook.py",
+   "backend/scripts/loadtest/__init__.py",
+   "backend/scripts/loadtest/run_loadtest.py",
+   "backend/scripts/loadtest/stub_send_api.py",
+   "backend/scripts/simulate_messenger_event.py"
+  ],
+  "ai_engine": [
+   "ai_engine/shopsathi_ai/__init__.py",
+   "ai_engine/shopsathi_ai/budget.py",
+   "ai_engine/shopsathi_ai/chunking.py",
+   "ai_engine/shopsathi_ai/config.py",
+   "ai_engine/shopsathi_ai/engine.py",
+   "ai_engine/shopsathi_ai/extraction.py",
+   "ai_engine/shopsathi_ai/handover.py",
+   "ai_engine/shopsathi_ai/insights.py",
+   "ai_engine/shopsathi_ai/interfaces.py",
+   "ai_engine/shopsathi_ai/language.py",
+   "ai_engine/shopsathi_ai/ordering.py",
+   "ai_engine/shopsathi_ai/phrases.py",
+   "ai_engine/shopsathi_ai/prompts/__init__.py",
+   "ai_engine/shopsathi_ai/providers/__init__.py",
+   "ai_engine/shopsathi_ai/providers/base.py",
+   "ai_engine/shopsathi_ai/providers/factory.py",
+   "ai_engine/shopsathi_ai/providers/langchain_chat.py",
+   "ai_engine/shopsathi_ai/providers/local_embeddings.py",
+   "ai_engine/shopsathi_ai/providers/mock.py",
+   "ai_engine/shopsathi_ai/providers/openai_embeddings.py",
+   "ai_engine/shopsathi_ai/reply.py",
+   "ai_engine/shopsathi_ai/retrieval.py",
+   "ai_engine/shopsathi_ai/suggestions.py",
+   "ai_engine/shopsathi_ai/tools.py",
+   "ai_engine/shopsathi_ai/understanding.py",
+   "ai_engine/shopsathi_ai/validators.py"
+  ],
+  "prompts": [
+   "ai_engine/shopsathi_ai/prompts/__init__.py",
+   "ai_engine/shopsathi_ai/prompts/handover_terms.json",
+   "ai_engine/shopsathi_ai/prompts/insights_map_user.md",
+   "ai_engine/shopsathi_ai/prompts/insights_reduce_user.md",
+   "ai_engine/shopsathi_ai/prompts/insights_system.md",
+   "ai_engine/shopsathi_ai/prompts/needs_system.md",
+   "ai_engine/shopsathi_ai/prompts/needs_user.md",
+   "ai_engine/shopsathi_ai/prompts/order_system.md",
+   "ai_engine/shopsathi_ai/prompts/order_user.md",
+   "ai_engine/shopsathi_ai/prompts/phrases.json",
+   "ai_engine/shopsathi_ai/prompts/reply_system.md",
+   "ai_engine/shopsathi_ai/prompts/reply_user.md",
+   "ai_engine/shopsathi_ai/prompts/understand_system.md",
+   "ai_engine/shopsathi_ai/prompts/understand_user.md"
+  ],
+  "backend_tests": [
+   "backend/tests/__init__.py",
+   "backend/tests/conftest.py",
+   "backend/tests/security/__init__.py",
+   "backend/tests/security/test_auth_security.py",
+   "backend/tests/security/test_limits_under_load.py",
+   "backend/tests/security/test_role_matrix.py",
+   "backend/tests/security/test_secrets.py",
+   "backend/tests/security/test_transport.py",
+   "backend/tests/security/test_webhook_and_limits.py",
+   "backend/tests/test_admin.py",
+   "backend/tests/test_auth.py",
+   "backend/tests/test_embeddings.py",
+   "backend/tests/test_facebook.py",
+   "backend/tests/test_handover_api.py",
+   "backend/tests/test_health.py",
+   "backend/tests/test_inbox.py",
+   "backend/tests/test_insights.py",
+   "backend/tests/test_loadtest_tools.py",
+   "backend/tests/test_messenger.py",
+   "backend/tests/test_orders_api.py",
+   "backend/tests/test_orders_dashboard.py",
+   "backend/tests/test_plans.py",
+   "backend/tests/test_policy.py",
+   "backend/tests/test_privacy.py",
+   "backend/tests/test_product_import.py",
+   "backend/tests/test_products.py",
+   "backend/tests/test_reports.py",
+   "backend/tests/test_staff.py",
+   "backend/tests/test_suggestions_api.py",
+   "backend/tests/test_tenancy.py",
+   "backend/tests/test_test_chat.py"
+  ],
+  "ai_tests": [
+   "ai_engine/tests/__init__.py",
+   "ai_engine/tests/helpers.py",
+   "ai_engine/tests/test_conversation.py",
+   "ai_engine/tests/test_embeddings_and_retrieval.py",
+   "ai_engine/tests/test_factory.py",
+   "ai_engine/tests/test_handover.py",
+   "ai_engine/tests/test_insights.py",
+   "ai_engine/tests/test_orders.py",
+   "ai_engine/tests/test_suggestions.py",
+   "ai_engine/tests/test_validators.py"
+  ],
+  "eval": [
+   "evaluation/evalkit/__init__.py",
+   "evaluation/evalkit/cases.py",
+   "evaluation/evalkit/gateway.py",
+   "evaluation/evalkit/metrics.py",
+   "evaluation/evalkit/report.py",
+   "evaluation/evalkit/runner.py",
+   "evaluation/run_eval.py",
+   "evaluation/tests/__init__.py",
+   "evaluation/tests/test_cases_and_run.py",
+   "evaluation/tests/test_metrics.py"
+  ],
+  "frontend_pages": [
+   "frontend/src/app/(auth)/forgot-password/page.tsx",
+   "frontend/src/app/(auth)/layout.tsx",
+   "frontend/src/app/(auth)/login/page.tsx",
+   "frontend/src/app/(auth)/reset-password/page.tsx",
+   "frontend/src/app/(auth)/signup/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/facebook/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/inbox/[id]/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/inbox/layout.tsx",
+   "frontend/src/app/(dashboard)/dashboard/inbox/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/orders/[id]/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/orders/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/plan/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/policy/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/products/[id]/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/products/new/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/products/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/reports/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/settings/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/staff/page.tsx",
+   "frontend/src/app/(dashboard)/dashboard/test-chat/page.tsx",
+   "frontend/src/app/(dashboard)/layout.tsx",
+   "frontend/src/app/admin/ai-usage/page.tsx",
+   "frontend/src/app/admin/health/page.tsx",
+   "frontend/src/app/admin/layout.tsx",
+   "frontend/src/app/admin/page.tsx",
+   "frontend/src/app/admin/plans/page.tsx",
+   "frontend/src/app/admin/shops/[id]/page.tsx",
+   "frontend/src/app/layout.tsx",
+   "frontend/src/app/page.tsx"
+  ],
+  "frontend_components": [
+   "frontend/src/components/ChatCards.tsx",
+   "frontend/src/components/ChipInput.tsx",
+   "frontend/src/components/Inbox.tsx",
+   "frontend/src/components/NotificationBell.tsx",
+   "frontend/src/components/PlanPicker.tsx",
+   "frontend/src/components/ProductForm.tsx",
+   "frontend/src/components/ProductImport.tsx",
+   "frontend/src/components/RoleGuard.tsx",
+   "frontend/src/components/ShopActions.tsx",
+   "frontend/src/components/SimulatedPaymentConfirm.tsx",
+   "frontend/src/components/ui.tsx"
+  ],
+  "frontend_lib": [
+   "frontend/src/lib/api/admin.ts",
+   "frontend/src/lib/api/client.ts",
+   "frontend/src/lib/api/facebook.ts",
+   "frontend/src/lib/api/inbox.ts",
+   "frontend/src/lib/api/notifications.ts",
+   "frontend/src/lib/api/orders.ts",
+   "frontend/src/lib/api/plans.ts",
+   "frontend/src/lib/api/policy.ts",
+   "frontend/src/lib/api/products.ts",
+   "frontend/src/lib/api/reports.ts",
+   "frontend/src/lib/api/staff.ts",
+   "frontend/src/lib/api/testChat.ts",
+   "frontend/src/lib/auth/AuthProvider.tsx",
+   "frontend/src/lib/auth/storage.ts"
+  ],
+  "deploy": [
+   "deploy/.env.prod.example",
+   "deploy/Caddyfile",
+   "deploy/README.md",
+   "deploy/docker-compose.prod.yml",
+   "deploy/render.yaml"
+  ]
+ },
+ "migrations": [
+  {
+   "file": "0001_initial.py",
+   "rev": "0001",
+   "down": "None",
+   "title": "initial empty migration"
+  },
+  {
+   "file": "0002_shops_users_password_reset_tokens.py",
+   "rev": "0002",
+   "down": "0001",
+   "title": "shops users password reset tokens"
+  },
+  {
+   "file": "0003_plans_and_usage.py",
+   "rev": "0003",
+   "down": "0002",
+   "title": "plans, simulated payments, message usage, shops.plan_id"
+  },
+  {
+   "file": "0004_products.py",
+   "rev": "0004",
+   "down": "0003",
+   "title": "products"
+  },
+  {
+   "file": "0005_shop_policy.py",
+   "rev": "0005",
+   "down": "0004",
+   "title": "shop policies and delivery areas"
+  },
+  {
+   "file": "0006_embeddings_and_ai_usage.py",
+   "rev": "0006",
+   "down": "0005",
+   "title": "embedding_chunks (pgvector) and ai_usage_logs"
+  },
+  {
+   "file": "0007_chats_and_messages.py",
+   "rev": "0007",
+   "down": "0006",
+   "title": "chats and messages"
+  },
+  {
+   "file": "0008_orders_and_pending_order.py",
+   "rev": "0008",
+   "down": "0007",
+   "title": "orders and chats.pending_order"
+  },
+  {
+   "file": "0009_handover_events_and_notifications.py",
+   "rev": "0009",
+   "down": "0008",
+   "title": "handover_events and notifications"
+  },
+  {
+   "file": "0010_facebook_pages.py",
+   "rev": "0010",
+   "down": "0009",
+   "title": "facebook_pages"
+  },
+  {
+   "file": "0011_unique_messenger_chat.py",
+   "rev": "0011",
+   "down": "0010",
+   "title": "one Messenger chat per shop and customer"
+  },
+  {
+   "file": "0012_weekly_insights.py",
+   "rev": "0012",
+   "down": "0011",
+   "title": "weekly AI chat insights"
+  },
+  {
+   "file": "0013_admin_actions.py",
+   "rev": "0013",
+   "down": "0012",
+   "title": "platform admin action log"
+  }
+ ],
+ "settings": [
+  {
+   "name": "APP_ENV",
+   "default": "local"
+  },
+  {
+   "name": "DATABASE_URL",
+   "default": "postgresql+psycopg://shopsathi:shopsathi_local@localhost:543"
+  },
+  {
+   "name": "DB_POOL_SIZE",
+   "default": "10"
+  },
+  {
+   "name": "DB_MAX_OVERFLOW",
+   "default": "20"
+  },
+  {
+   "name": "DB_POOL_TIMEOUT_SECONDS",
+   "default": "30"
+  },
+  {
+   "name": "TEST_DATABASE_URL",
+   "default": "postgresql+psycopg://shopsathi:shopsathi_local@localhost:543"
+  },
+  {
+   "name": "REDIS_URL",
+   "default": "redis://localhost:6379/0"
+  },
+  {
+   "name": "FRONTEND_ORIGIN",
+   "default": "http://localhost:3000"
+  },
+  {
+   "name": "BACKEND_PUBLIC_URL",
+   "default": "http://localhost:8000"
+  },
+  {
+   "name": "MEDIA_ROOT",
+   "default": "media"
+  },
+  {
+   "name": "MAX_UPLOAD_MB",
+   "default": "5"
+  },
+  {
+   "name": "LLM_PROVIDER",
+   "default": "mock"
+  },
+  {
+   "name": "LLM_MODEL",
+   "default": "gpt-4o-mini"
+  },
+  {
+   "name": "EMBEDDING_PROVIDER",
+   "default": "mock"
+  },
+  {
+   "name": "EMBEDDING_MODEL",
+   "default": "text-embedding-3-small"
+  },
+  {
+   "name": "EMBEDDING_DIM",
+   "default": "1536"
+  },
+  {
+   "name": "OPENAI_API_KEY",
+   "default": ""
+  },
+  {
+   "name": "GEMINI_API_KEY",
+   "default": ""
+  },
+  {
+   "name": "AI_COST_RATES",
+   "default": "{'text-embedding-3-small': {'input_per_1m': 0.02}, 'text-emb"
+  },
+  {
+   "name": "FB_APP_ID",
+   "default": ""
+  },
+  {
+   "name": "FB_APP_SECRET",
+   "default": ""
+  },
+  {
+   "name": "FB_GRAPH_API_VERSION",
+   "default": "v21.0"
+  },
+  {
+   "name": "FB_OAUTH_REDIRECT_URI",
+   "default": ""
+  },
+  {
+   "name": "FB_TOKEN_ENCRYPTION_KEY",
+   "default": ""
+  },
+  {
+   "name": "FRONTEND_URL",
+   "default": ""
+  },
+  {
+   "name": "FB_VERIFY_TOKEN",
+   "default": ""
+  },
+  {
+   "name": "FB_SEND_MAX_ATTEMPTS",
+   "default": "3"
+  },
+  {
+   "name": "FB_SEND_RETRY_DELAY_SECONDS",
+   "default": "0.5"
+  },
+  {
+   "name": "TRUSTED_PROXIES",
+   "default": "127.0.0.1"
+  },
+  {
+   "name": "FB_GRAPH_BASE_URL",
+   "default": "https://graph.facebook.com"
+  },
+  {
+   "name": "FB_DIALOG_BASE_URL",
+   "default": "https://www.facebook.com"
+  },
+  {
+   "name": "CHAT_MEMORY_TURNS",
+   "default": "8"
+  },
+  {
+   "name": "CHAT_MEMORY_TTL_SECONDS",
+   "default": "21600"
+  },
+  {
+   "name": "RAG_MIN_SCORE",
+   "default": "0.2"
+  },
+  {
+   "name": "RAG_MIN_PRODUCT_SCORE",
+   "default": "0.3"
+  },
+  {
+   "name": "AI_CONFIDENCE_THRESHOLD",
+   "default": "0.5"
+  },
+  {
+   "name": "REPORT_MAX_RANGE_DAYS",
+   "default": "366"
+  },
+  {
+   "name": "ORDER_PENDING_TTL_HOURS",
+   "default": "24"
+  },
+  {
+   "name": "CELERY_TASK_ALWAYS_EAGER",
+   "default": "False"
+  },
+  {
+   "name": "MAX_IMPORT_MB",
+   "default": "2"
+  },
+  {
+   "name": "MAX_IMPORT_ROWS",
+   "default": "1000"
+  },
+  {
+   "name": "JWT_SECRET",
+   "default": ""
+  },
+  {
+   "name": "ACCESS_TOKEN_EXPIRE_MINUTES",
+   "default": "720"
+  },
+  {
+   "name": "PASSWORD_MIN_LENGTH",
+   "default": "8"
+  },
+  {
+   "name": "PASSWORD_RESET_EXPIRE_MINUTES",
+   "default": "60"
+  },
+  {
+   "name": "LOGIN_RATE_LIMIT",
+   "default": "10"
+  },
+  {
+   "name": "LOGIN_RATE_WINDOW_SECONDS",
+   "default": "300"
+  },
+  {
+   "name": "RESET_RATE_LIMIT",
+   "default": "5"
+  },
+  {
+   "name": "RESET_RATE_WINDOW_SECONDS",
+   "default": "900"
+  },
+  {
+   "name": "SMTP_HOST",
+   "default": ""
+  },
+  {
+   "name": "SMTP_PORT",
+   "default": "587"
+  },
+  {
+   "name": "SMTP_USERNAME",
+   "default": ""
+  },
+  {
+   "name": "SMTP_PASSWORD",
+   "default": ""
+  },
+  {
+   "name": "SMTP_FROM",
+   "default": "ShopSathi <no-reply@shopsathi.local>"
+  },
+  {
+   "name": "SMTP_USE_TLS",
+   "default": "True"
+  }
+ ]
+}

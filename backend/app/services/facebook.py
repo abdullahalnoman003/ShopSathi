@@ -21,7 +21,10 @@ from app.core.config import get_settings
 from app.core.crypto import CipherError, TokenCipher
 from app.core.redis import get_redis
 from app.integrations.facebook.graph_client import REQUIRED_PERMISSIONS, GraphAPIError, GraphClient
+import logging
 from app.models import FacebookPage
+
+logger = logging.getLogger("shopsathi.facebook")
 
 STATE_TTL = timedelta(minutes=10)
 PENDING_TTL_SECONDS = 600
@@ -146,7 +149,9 @@ class FacebookService:
             return f"{base}?status=select"
         except FacebookError as e:
             return fail(e.code)
-        except GraphAPIError:
+        except GraphAPIError as e:
+            # the message comes from Facebook and holds no secret; it tells the developer what to fix (for example the redirect URI or the app type)
+            logger.warning("Facebook login callback failed: code=%s subcode=%s message=%s", e.code, getattr(e, "subcode", None), e)
             return fail("facebook_error")
 
     # ---------------------------------------------------------------- pages

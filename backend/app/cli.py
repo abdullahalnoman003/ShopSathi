@@ -303,6 +303,41 @@ def seed() -> int:
     return 0
 
 
+DEMO_LOGIN_PASSWORD = "Demo@12345"
+DEMO_MODERATOR_EMAIL = "mod.demo@example.com"
+DEMO_ADMIN_EMAIL = "admin.demo@example.com"
+
+
+def demo_accounts() -> int:
+    """Local demos only: give the demo owners a known password and create a demo moderator and a demo platform admin,
+    so that the login page can fill them in with one click (frontend NEXT_PUBLIC_DEMO_LOGINS=true).
+    Refuses to run outside a local environment (APP_ENV)."""
+    settings = get_settings()
+    if not settings.is_local:
+        print("demo-accounts only runs when APP_ENV is local/dev/development.", file=sys.stderr)
+        return 1
+    demos = json.loads((SEED_DIR / "demo_shops.json").read_text(encoding="utf-8"))
+    with SessionLocal() as db:
+        hashed = hash_password(DEMO_LOGIN_PASSWORD)
+        first_shop_id = None
+        for demo in demos:
+            owner = db.scalar(select(User).where(User.email == demo["owner_email"].lower()))
+            if owner is None:
+                print(f"missing {demo['owner_email']}: run 'python -m app.cli seed' first", file=sys.stderr)
+                return 1
+            owner.password_hash = hashed
+            first_shop_id = first_shop_id or owner.shop_id
+        for email, name, role, shop_id in ((DEMO_MODERATOR_EMAIL, "Demo Moderator", "moderator", first_shop_id), (DEMO_ADMIN_EMAIL, "Demo Platform Admin", "platform_admin", None)):
+            user = db.scalar(select(User).where(User.email == email))
+            if user is None:
+                db.add(User(email=email, password_hash=hashed, full_name=name, role=role, shop_id=shop_id))
+            else:
+                user.password_hash = hashed
+        db.commit()
+    print("demo accounts ready (owners, moderator, platform admin)")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m app.cli", description="ShopSathi commands")
     sub = parser.add_subparsers(dest="command", metavar="<command>")
@@ -321,6 +356,7 @@ def main(argv: list[str] | None = None) -> int:
     p_ins.add_argument("--shop-id", type=int, required=True)
     p_ins.add_argument("--week-start", help="the Monday that starts the week, YYYY-MM-DD (default: last week)")
     sub.add_parser("seed", help="create fictional demo shops and owners (idempotent)")
+    sub.add_parser("demo-accounts", help="local demos: known password for the demo owners, plus a demo moderator and admin (for the login page buttons)")
     args = parser.parse_args(argv)
     if args.command == "create-admin":
         return create_admin(args.email, args.full_name)
@@ -332,6 +368,8 @@ def main(argv: list[str] | None = None) -> int:
         return generate_insights(args.shop_id, args.week_start)
     if args.command == "seed":
         return seed()
+    if args.command == "demo-accounts":
+        return demo_accounts()
     parser.print_help()
     return 0
 

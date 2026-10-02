@@ -58,6 +58,10 @@ def install_log_masking() -> None:
         record = previous(*args, **kwargs)
         if record.name in EXEMPT_LOGGERS:
             return record
+        if record.name == "uvicorn.access" and isinstance(record.args, tuple) and len(record.args) == 5:
+            # uvicorn's access formatter unpacks these five values (client, method, path, http version, status): mask them one by one
+            record.args = tuple(mask(a) if isinstance(a, str) else a for a in record.args)
+            return record
         try:
             message = record.getMessage()
         except Exception:  # a broken format string must never break logging
