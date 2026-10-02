@@ -26,7 +26,7 @@ Thumbs.db
 celerybeat-schedule*
 
 # ignore forntend 
-frontend/
+
 
 # Agent files
 AGENTS.md
